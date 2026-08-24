@@ -457,7 +457,7 @@ function MandiSection({ t, lang }) {
 
 function DiseaseSection({ t, lang }) {
   const [diagMode, setDiagMode] = useState('photo'); // 'photo' or 'symptoms'
-  const [cropName, setCropName] = useState('Tomato');
+  const [cropName, setCropName] = useState('Mango');
   const [symptoms, setSymptoms] = useState(['Yellow spots', 'Leaf curling']);
   const [customText, setCustomText] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
@@ -471,6 +471,12 @@ function DiseaseSection({ t, lang }) {
   // Preset sample leaf photos for instant hackathon demonstration
   const presetLeaves = [
     {
+      name: 'Mango Anthracnose',
+      crop: 'Mango',
+      img: 'https://images.unsplash.com/photo-1553279768-865429fa0078?w=300&q=80',
+      symptoms: ['Dark necrotic spots', 'Leaf tip burn']
+    },
+    {
       name: 'Tomato Blight',
       crop: 'Tomato',
       img: 'https://images.unsplash.com/photo-1592417817098-8f3d6eb231fc?w=300&q=80',
@@ -481,12 +487,6 @@ function DiseaseSection({ t, lang }) {
       crop: 'Wheat',
       img: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=300&q=80',
       symptoms: ['Yellow spots', 'Stunted growth']
-    },
-    {
-      name: 'Cotton Spot',
-      crop: 'Cotton',
-      img: 'https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=300&q=80',
-      symptoms: ['Leaf curling', 'White pustules']
     },
     {
       name: 'Potato Blight',
@@ -534,8 +534,9 @@ function DiseaseSection({ t, lang }) {
     setLoading(true);
     setResult(null);
     const symptomsStr = [...symptoms, customText].filter(Boolean).join(', ');
+    const targetCropToSend = diagMode === 'photo' ? (cropName || 'auto') : cropName;
     try {
-      const res = await diagnoseCropDisease(cropName, symptomsStr, selectedImage);
+      const res = await diagnoseCropDisease(targetCropToSend, symptomsStr, selectedImage);
       setResult(res);
     } catch (err) {
       console.error(err);
@@ -572,22 +573,14 @@ function DiseaseSection({ t, lang }) {
             </button>
           </div>
 
-          <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>1. {t.disease_select_crop || 'Select Crop'}</h3>
-          <div className="sample-leaf-row" style={{ marginBottom: 16 }}>
-            {sampleCrops.map(c => (
-              <button
-                key={c}
-                className={`sample-leaf-btn ${cropName === c ? 'active' : ''}`}
-                onClick={() => setCropName(c)}
-              >
-                <Leaf size={14} /> {translateCrop(c, lang)}
-              </button>
-            ))}
-          </div>
-
           {diagMode === 'photo' ? (
             <div>
-              <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>2. {t.disease_upload_leaf || 'Upload or Capture Leaf Photo'}</h3>
+              <div style={{ background: 'var(--mint)', color: 'var(--green)', border: '1px solid var(--line)', borderRadius: 12, padding: '10px 14px', fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                <Sparkles size={16} />
+                <span>AI Auto-Species & Disease Identification Active</span>
+              </div>
+
+              <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>Upload or Capture Leaf Photo</h3>
               
               <input
                 type="file"
@@ -629,7 +622,7 @@ function DiseaseSection({ t, lang }) {
                     <Camera size={32} />
                   </div>
                   <div className="dropzone-text">{t.disease_drag_drop || 'Drag & drop leaf photo here or click below'}</div>
-                  <div className="dropzone-sub">{t.disease_supports || 'Supports JPG, PNG, WEBP leaf images'}</div>
+                  <div className="dropzone-sub">{t.disease_supports || 'Supports Mango, Tomato, Wheat, Cotton, Potato & all crop leaves'}</div>
                   
                   <div className="dropzone-btns">
                     <button
@@ -672,6 +665,19 @@ function DiseaseSection({ t, lang }) {
             </div>
           ) : (
             <div>
+              <h3 style={{ margin: '0 0 12px', fontSize: 16 }}>1. {t.disease_select_crop || 'Select Crop'}</h3>
+              <div className="sample-leaf-row" style={{ marginBottom: 16 }}>
+                {sampleCrops.map(c => (
+                  <button
+                    key={c}
+                    className={`sample-leaf-btn ${cropName === c ? 'active' : ''}`}
+                    onClick={() => setCropName(c)}
+                  >
+                    <Leaf size={14} /> {translateCrop(c, lang)}
+                  </button>
+                ))}
+              </div>
+
               <h3 style={{ margin: '14px 0 10px', fontSize: 16 }}>2. {t.disease_step2 || 'Select Observed Leaf Symptoms'}</h3>
               <div className="symptom-tags">
                 {allSymptomTags.map(tag => (
@@ -703,7 +709,7 @@ function DiseaseSection({ t, lang }) {
             disabled={loading}
             style={{ width: '100%', marginTop: 20, background: 'var(--green)', color: 'white', border: 0, padding: 13, borderRadius: 12, fontWeight: 700, fontSize: 13, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}
           >
-            <Sparkles size={16} /> {loading ? (t.disease_analyzing || 'Scanning Leaf & Analyzing Pathogens...') : (t.disease_btn || 'Diagnose Crop Health')}
+            <Sparkles size={16} /> {loading ? (t.disease_analyzing || 'Scanning Leaf & Auto-Detecting Species...') : (t.disease_btn || 'Diagnose Crop Health')}
           </button>
         </div>
 
