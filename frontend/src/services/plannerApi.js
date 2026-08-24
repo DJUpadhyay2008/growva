@@ -1,6 +1,6 @@
 // API Service for Growva Crop Planning, Weather, Mandi Prices, Schemes & Disease Diagnosis
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://growva-backend.onrender.com/api/v1';
 
 export async function fetchCropRecommendations(location, soilType = 'Fertile loam') {
   try {

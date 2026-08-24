@@ -44,7 +44,8 @@ def get_current_weather_and_forecast(location: str = "Vadodara, Gujarat") -> Dic
             geo_res = httpx.get(
                 "https://geocoding-api.open-meteo.com/v1/search",
                 params={"name": location, "count": 1},
-                timeout=6.0
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+                timeout=8.0
             )
             if geo_res.status_code == 200 and geo_res.json().get("results"):
                 res = geo_res.json()["results"][0]
@@ -65,7 +66,8 @@ def get_current_weather_and_forecast(location: str = "Vadodara, Gujarat") -> Dic
                     "daily": "temperature_2m_max,precipitation_sum,precipitation_probability_max,weather_code",
                     "timezone": "auto"
                 },
-                timeout=6.0
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+                timeout=8.0
             )
             if w_res.status_code == 200:
                 data = w_res.json()
