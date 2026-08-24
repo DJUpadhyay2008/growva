@@ -44,18 +44,18 @@ const fallback = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?a
 const slug = s => s.replace(/[^a-zA-Z0-9]/g,'');
 
 const cropDetailsExtra = {
-  Wheat: { ph: "6.0 - 7.5", minTemp: "10°C", maxTemp: "30°C", water: "450–650 mm", yield: "3.5 - 4.5 tonnes/ha", pests: "Yellow rust, Karnal bunt", byproduct: "Wheat straw for cattle fodder & biochar production" },
-  Rice: { ph: "5.5 - 7.0", minTemp: "20°C", maxTemp: "38°C", water: "1000–1500 mm", yield: "4.0 - 5.5 tonnes/ha", pests: "Paddy blast, Brown plant hopper", byproduct: "Paddy straw for mushroom cultivation & bio-paper" },
-  Bajra: { ph: "6.0 - 8.0", minTemp: "18°C", maxTemp: "42°C", water: "250–500 mm", yield: "2.0 - 3.0 tonnes/ha", pests: "Ergot, Downy mildew", byproduct: "Green fodder & dry silage" },
-  Maize: { ph: "6.0 - 7.5", minTemp: "15°C", maxTemp: "35°C", water: "500–900 mm", yield: "4.0 - 6.0 tonnes/ha", pests: "Fall armyworm, Stem borer", byproduct: "Corn cobs for bio-ethanol & animal feed" },
-  Cotton: { ph: "6.0 - 8.0", minTemp: "18°C", maxTemp: "38°C", water: "550–1100 mm", yield: "1.8 - 2.5 tonnes/ha", pests: "Pink bollworm, Whitefly", byproduct: "Cotton seed cake for high-protein livestock feed" },
-  Sugarcane: { ph: "6.0 - 7.5", minTemp: "20°C", maxTemp: "38°C", water: "1200–2500 mm", yield: "70 - 100 tonnes/ha", pests: "Red rot, Pyrilla", byproduct: "Bagasse for paper & bio-power, pressmud for organic fertilizer" },
-  Tomato: { ph: "6.0 - 7.0", minTemp: "15°C", maxTemp: "34°C", water: "450–900 mm", yield: "25 - 40 tonnes/ha", pests: "Early blight, Leaf curl virus", byproduct: "Tomato pomace for animal feed supplement" },
-  Potato: { ph: "5.5 - 6.5", minTemp: "12°C", maxTemp: "28°C", water: "400–750 mm", yield: "20 - 35 tonnes/ha", pests: "Late blight, Aphids", byproduct: "Potato peels for industrial starch & compost" },
-  Mango: { ph: "5.5 - 7.5", minTemp: "22°C", maxTemp: "42°C", water: "700–1500 mm", yield: "8 - 15 tonnes/ha", pests: "Mango hopper, Anthracnose", byproduct: "Mango seed kernels for starch & seed butter" },
-  Banana: { ph: "6.0 - 7.5", minTemp: "18°C", maxTemp: "38°C", water: "1000–2200 mm", yield: "40 - 65 tonnes/ha", pests: "Sigatoka leaf spot, Panama wilt", byproduct: "Banana pseudostem fiber for eco-friendly textiles & bio-organic fertilizer" },
-  Turmeric: { ph: "6.0 - 7.5", minTemp: "20°C", maxTemp: "36°C", water: "900–1600 mm", yield: "20 - 28 tonnes/ha", pests: "Rhizome rot, Leaf spot", byproduct: "Spent turmeric waste for natural dye & organic mulch" },
-  Cumin: { ph: "6.5 - 8.0", minTemp: "10°C", maxTemp: "28°C", water: "150–400 mm", yield: "0.6 - 1.0 tonnes/ha", pests: "Wilt, Alternaria blight", byproduct: "Cumin straw distillation for aroma essential oil" }
+  Wheat: { ph: "6.0 - 7.5", minTemp: "10°C", maxTemp: "30°C", water: "450–650 mm", yield: "3.5 - 4.5 tonnes/ha", pests: "Yellow rust, Karnal bunt", byproduct: "Wheat straw for cattle fodder & biochar production", duration: "120 - 150 days" },
+  Rice: { ph: "5.5 - 7.0", minTemp: "20°C", maxTemp: "38°C", water: "1000–1500 mm", yield: "4.0 - 5.5 tonnes/ha", pests: "Paddy blast, Brown plant hopper", byproduct: "Paddy straw for mushroom cultivation & bio-paper", duration: "100 - 150 days" },
+  Bajra: { ph: "6.0 - 8.0", minTemp: "18°C", maxTemp: "42°C", water: "250–500 mm", yield: "2.0 - 3.0 tonnes/ha", pests: "Ergot, Downy mildew", byproduct: "Green fodder & dry silage", duration: "70 - 90 days" },
+  Maize: { ph: "6.0 - 7.5", minTemp: "15°C", maxTemp: "35°C", water: "500–900 mm", yield: "4.0 - 6.0 tonnes/ha", pests: "Fall armyworm, Stem borer", byproduct: "Corn cobs for bio-ethanol & animal feed", duration: "90 - 120 days" },
+  Cotton: { ph: "6.0 - 8.0", minTemp: "18°C", maxTemp: "38°C", water: "550–1100 mm", yield: "1.8 - 2.5 tonnes/ha", pests: "Pink bollworm, Whitefly", byproduct: "Cotton seed cake for high-protein livestock feed", duration: "150 - 180 days" },
+  Sugarcane: { ph: "6.0 - 7.5", minTemp: "20°C", maxTemp: "38°C", water: "1200–2500 mm", yield: "70 - 100 tonnes/ha", pests: "Red rot, Pyrilla", byproduct: "Bagasse for paper & bio-power, pressmud for organic fertilizer", duration: "10 - 14 months" },
+  Tomato: { ph: "6.0 - 7.0", minTemp: "15°C", maxTemp: "34°C", water: "450–900 mm", yield: "25 - 40 tonnes/ha", pests: "Early blight, Leaf curl virus", byproduct: "Tomato pomace for animal feed supplement", duration: "90 - 120 days" },
+  Potato: { ph: "5.5 - 6.5", minTemp: "12°C", maxTemp: "28°C", water: "400–750 mm", yield: "20 - 35 tonnes/ha", pests: "Late blight, Aphids", byproduct: "Potato peels for industrial starch & compost", duration: "80 - 120 days" },
+  Mango: { ph: "5.5 - 7.5", minTemp: "22°C", maxTemp: "42°C", water: "700–1500 mm", yield: "8 - 15 tonnes/ha", pests: "Mango hopper, Anthracnose", byproduct: "Mango seed kernels for starch & seed butter", duration: "Perennial (3-5 years to fruit)" },
+  Banana: { ph: "6.0 - 7.5", minTemp: "18°C", maxTemp: "38°C", water: "1000–2200 mm", yield: "40 - 65 tonnes/ha", pests: "Sigatoka leaf spot, Panama wilt", byproduct: "Banana pseudostem fiber for eco-friendly textiles & bio-organic fertilizer", duration: "10 - 15 months" },
+  Turmeric: { ph: "6.0 - 7.5", minTemp: "20°C", maxTemp: "36°C", water: "900–1600 mm", yield: "20 - 28 tonnes/ha", pests: "Rhizome rot, Leaf spot", byproduct: "Spent turmeric waste for natural dye & organic mulch", duration: "210 - 270 days" },
+  Cumin: { ph: "6.5 - 8.0", minTemp: "10°C", maxTemp: "28°C", water: "150–400 mm", yield: "0.6 - 1.0 tonnes/ha", pests: "Wilt, Alternaria blight", byproduct: "Cumin straw distillation for aroma essential oil", duration: "100 - 120 days" }
 };
 
 const allItems = Object.entries(groups).flatMap(([group, names]) =>
@@ -71,7 +71,8 @@ const allItems = Object.entries(groups).flatMap(([group, names]) =>
     minTemp: cropDetailsExtra[name]?.minTemp || '15°C',
     maxTemp: cropDetailsExtra[name]?.maxTemp || '35°C',
     pests: cropDetailsExtra[name]?.pests || 'Aphids, Leaf spot',
-    byproduct: cropDetailsExtra[name]?.byproduct || 'Crop residue for compost & biochar'
+    byproduct: cropDetailsExtra[name]?.byproduct || 'Crop residue for compost & biochar',
+    duration: cropDetailsExtra[name]?.duration || (group === 'Fruits' ? 'Perennial' : '90 - 120 days')
   }))
 );
 
@@ -387,10 +388,11 @@ function MandiSection({ t, lang }) {
     loadMandi();
   }, []);
 
-  const loadMandi = async () => {
+  const loadMandi = async (overrideState) => {
     setLoading(true);
     try {
-      const res = await fetchMandiPrices(commodity, stateFilter);
+      const stateToUse = typeof overrideState === 'string' ? overrideState : stateFilter;
+      const res = await fetchMandiPrices(commodity, stateToUse);
       setMandiItems(res.items || []);
     } catch (err) {
       console.error(err);
@@ -416,7 +418,10 @@ function MandiSection({ t, lang }) {
           value={commodity}
           onChange={(e) => setCommodity(e.target.value)}
         />
-        <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
+        <select value={stateFilter} onChange={(e) => {
+          setStateFilter(e.target.value);
+          loadMandi(e.target.value);
+        }}>
           <option value="">{t.mandi_all_states || 'All States'}</option>
           <option value="Gujarat">Gujarat</option>
           <option value="Punjab">Punjab</option>
@@ -933,6 +938,10 @@ function CropDetailModal({ crop, t, lang, onClose }) {
             <small style={{ color: 'var(--muted)', fontSize: 10 }}>Temperature Range</small>
             <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2 }}>{crop.minTemp} to {crop.maxTemp}</div>
           </div>
+          <div style={{ background: '#f8faf6', padding: 12, borderRadius: 12 }}>
+            <small style={{ color: 'var(--muted)', fontSize: 10 }}>Growth Duration</small>
+            <div style={{ fontWeight: 700, fontSize: 13, marginTop: 2 }}>{crop.duration}</div>
+          </div>
         </div>
 
         <div style={{ background: 'var(--mint)', padding: 14, borderRadius: 14, margin: '14px 0', fontSize: 12 }}>
@@ -1269,6 +1278,39 @@ function App() {
     allItems.filter(x => (group === 'All' || x.group === group) && x.name.toLowerCase().includes(query.toLowerCase())),
     [group, query]
   );
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const targetMapReverse = {
+        'dashboard': 'Dashboard',
+        'planner': 'Planner',
+        'weather': 'Weather',
+        'crop-library': 'Crop Library',
+        'mandi-rates': 'Mandi Rates',
+        'disease-check': 'Disease Check',
+        'schemes': 'Schemes',
+        'by-products': 'By-Products'
+      };
+      
+      let currentSection = '';
+      for (const id of Object.keys(targetMapReverse)) {
+        const element = document.getElementById(id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= 120 && rect.bottom >= 120) {
+            currentSection = targetMapReverse[id];
+            break;
+          }
+        }
+      }
+      if (currentSection) {
+        setActive(prev => currentSection !== prev ? currentSection : prev);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const go = (key) => {
     setActive(key);

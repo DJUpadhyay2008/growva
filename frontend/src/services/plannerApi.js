@@ -1,6 +1,6 @@
 // API Service for Growva Crop Planning, Weather, Mandi Prices, Schemes & Disease Diagnosis
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://growva-backend.onrender.com/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
 
 export async function fetchCropRecommendations(location, soilType = 'Fertile loam') {
   try {
@@ -80,16 +80,42 @@ export async function fetchMandiPrices(commodity = '', state = '', market = '') 
     return await res.json();
   } catch (error) {
     console.warn('Backend Mandi API fail, using fallback mandi data:', error);
+    
+    const mockItems = [
+      // Gujarat
+      { state: "Gujarat", district: "Ahmedabad", market: "Bavla Mandi", commodity: "Wheat", variety: "Lokwan", min_price: 2400, max_price: 2750, modal_price: 2600, arrival_date: "2026-08-24" },
+      { state: "Gujarat", district: "Ahmedabad", market: "Sanand Mandi", commodity: "Cotton", variety: "Shankar-6", min_price: 6800, max_price: 7400, modal_price: 7150, arrival_date: "2026-08-24" },
+      { state: "Gujarat", district: "Rajkot", market: "Rajkot APMC", commodity: "Groundnut", variety: "Bold", min_price: 5800, max_price: 6500, modal_price: 6200, arrival_date: "2026-08-24" },
+      { state: "Gujarat", district: "Mehsana", market: "Unjha APMC", commodity: "Cumin", variety: "Super Fine", min_price: 21000, max_price: 24500, modal_price: 23000, arrival_date: "2026-08-24" },
+      { state: "Gujarat", district: "Banaskantha", market: "Deesa APMC", commodity: "Castor Seed", variety: "Gujarat Castor", min_price: 5200, max_price: 5800, modal_price: 5600, arrival_date: "2026-08-24" },
+      { state: "Gujarat", district: "Bhavnagar", market: "Mahuva APMC", commodity: "Bajra", variety: "Desi", min_price: 2000, max_price: 2400, modal_price: 2200, arrival_date: "2026-08-24" },
+      // Punjab
+      { state: "Punjab", district: "Ludhiana", market: "Ludhiana APMC", commodity: "Paddy", variety: "Basmati 1121", min_price: 3800, max_price: 4400, modal_price: 4150, arrival_date: "2026-08-24" },
+      { state: "Punjab", district: "Amritsar", market: "Amritsar Mandi", commodity: "Wheat", variety: "HD 2967", min_price: 2200, max_price: 2400, modal_price: 2350, arrival_date: "2026-08-24" },
+      { state: "Punjab", district: "Bathinda", market: "Bathinda Mandi", commodity: "Cotton", variety: "Bt Cotton", min_price: 6500, max_price: 7100, modal_price: 6900, arrival_date: "2026-08-24" },
+      { state: "Punjab", district: "Patiala", market: "Patiala APMC", commodity: "Mustard", variety: "Sarson", min_price: 4800, max_price: 5400, modal_price: 5100, arrival_date: "2026-08-24" },
+      { state: "Punjab", district: "Jalandhar", market: "Jalandhar Mandi", commodity: "Maize", variety: "Hybrid", min_price: 2100, max_price: 2500, modal_price: 2300, arrival_date: "2026-08-24" },
+      { state: "Punjab", district: "Fazilka", market: "Abohar Mandi", commodity: "Kinnow", variety: "Grade A", min_price: 1800, max_price: 2600, modal_price: 2200, arrival_date: "2026-08-24" },
+      // Maharashtra
+      { state: "Maharashtra", district: "Nashik", market: "Lasalgaon Mandi", commodity: "Onion", variety: "Red Onion", min_price: 1400, max_price: 2100, modal_price: 1850, arrival_date: "2026-08-24" },
+      { state: "Maharashtra", district: "Pune", market: "Pune APMC", commodity: "Sugarcane", variety: "Co 86032", min_price: 280, max_price: 320, modal_price: 300, arrival_date: "2026-08-24" },
+      { state: "Maharashtra", district: "Latur", market: "Latur Mandi", commodity: "Soybean", variety: "JS 335", min_price: 4500, max_price: 5100, modal_price: 4800, arrival_date: "2026-08-24" },
+      { state: "Maharashtra", district: "Sangli", market: "Sangli APMC", commodity: "Turmeric", variety: "Rajapuri", min_price: 12000, max_price: 15500, modal_price: 14000, arrival_date: "2026-08-24" },
+      { state: "Maharashtra", district: "Solapur", market: "Solapur Mandi", commodity: "Pomegranate", variety: "Bhagwa", min_price: 6000, max_price: 9000, modal_price: 7500, arrival_date: "2026-08-24" },
+      { state: "Maharashtra", district: "Jalgaon", market: "Jalgaon APMC", commodity: "Cotton", variety: "MCU-5", min_price: 6700, max_price: 7300, modal_price: 7000, arrival_date: "2026-08-24" }
+    ];
+
+    let filtered = mockItems;
+    if (commodity) {
+      filtered = filtered.filter(item => item.commodity.toLowerCase().includes(commodity.toLowerCase()));
+    }
+    if (state) {
+      filtered = filtered.filter(item => item.state.toLowerCase() === state.toLowerCase());
+    }
+
     return {
-      total: 6,
-      items: [
-        { state: "Gujarat", district: "Ahmedabad", market: "Bavla Mandi", commodity: "Wheat", variety: "Lokwan", min_price: 2400, max_price: 2750, modal_price: 2600, arrival_date: "2026-08-24" },
-        { state: "Gujarat", district: "Ahmedabad", market: "Sanand Mandi", commodity: "Cotton", variety: "Shankar-6", min_price: 6800, max_price: 7400, modal_price: 7150, arrival_date: "2026-08-24" },
-        { state: "Gujarat", district: "Rajkot", market: "Rajkot APMC", commodity: "Groundnut", variety: "Bold", min_price: 5800, max_price: 6500, modal_price: 6200, arrival_date: "2026-08-24" },
-        { state: "Gujarat", district: "Mehsana", market: "Unjha APMC", commodity: "Cumin", variety: "Super Fine", min_price: 21000, max_price: 24500, modal_price: 23000, arrival_date: "2026-08-24" },
-        { state: "Punjab", district: "Ludhiana", market: "Ludhiana APMC", commodity: "Paddy", variety: "Basmati 1121", min_price: 3800, max_price: 4400, modal_price: 4150, arrival_date: "2026-08-24" },
-        { state: "Maharashtra", district: "Nashik", market: "Lasalgaon Mandi", commodity: "Onion", variety: "Red Onion", min_price: 1400, max_price: 2100, modal_price: 1850, arrival_date: "2026-08-24" }
-      ]
+      total: filtered.length,
+      items: filtered
     };
   }
 }
