@@ -358,7 +358,7 @@ function WeatherSection({ t, lang }) {
             <div className="alert-dot" />
             <div>
               <b>{t.weather_advisory_title || 'Agronomic Weather Advisory'}</b>
-              <p>{weatherData.advisory && weatherData.advisory.includes('Good moisture window') ? (t.weather_advisory_text || weatherData.advisory) : (weatherData.advisory || t.weather_advisory_text)}</p>
+              <p>{weatherData.advisory || (weatherData.alerts && weatherData.alerts[0]?.description) || t.weather_advisory_text || 'Favorable moisture window for sowing in the upcoming forecast.'}</p>
             </div>
           </div>
 
