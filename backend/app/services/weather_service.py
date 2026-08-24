@@ -145,7 +145,7 @@ def get_current_weather_and_forecast(location: str = "Vadodara, Gujarat") -> Dic
             {
                 "level": "success",
                 "title": "Rain window detected",
-                "description": f"Favorable moisture window for sowing in {location || 'Vadodara, Gujarat'}."
+                "description": f"Favorable moisture window for sowing in {location or 'Vadodara, Gujarat'}."
             }
         ],
         "forecast": [
