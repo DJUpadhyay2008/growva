@@ -5,6 +5,7 @@ class DiseaseDiagnosisRequest(BaseModel):
     crop_name: str
     symptoms_text: str
     affected_part: Optional[str] = "leaves" # leaves, stem, fruit, root
+    image_base64: Optional[str] = None
 
 class DiseaseDiagnosisResponse(BaseModel):
     crop_name: str
