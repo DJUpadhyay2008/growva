@@ -2,11 +2,11 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, CalendarDays, CheckCircle2, CloudRain, Droplets, Globe2, Leaf, MapPin, Menu, Mic, Recycle, Search, ShieldCheck, Sprout, Sun, TrendingUp, Wind, X, FileText, DollarSign, AlertTriangle, Send, Bot, User, ExternalLink, ChevronRight, Info, Sparkles, Camera, UploadCloud, Image, FileImage
+  ArrowRight, CalendarDays, CheckCircle2, CloudRain, Droplets, Globe2, Leaf, MapPin, Menu, Mic, Recycle, Search, ShieldCheck, Sprout, Sun, TrendingUp, Wind, X, FileText, DollarSign, AlertTriangle, Send, Bot, User, ExternalLink, ChevronRight, Info, Sparkles, Camera, UploadCloud, Image, FileImage, Settings
 } from 'lucide-react';
 import './styles.css';
 import {
-  fetchCropRecommendations, fetchWeather, fetchMandiPrices, fetchSchemes, checkSchemeEligibility, diagnoseCropDisease
+  fetchCropRecommendations, fetchWeather, fetchMandiPrices, fetchSchemes, checkSchemeEligibility, diagnoseCropDisease, sendChatMessage
 } from './services/plannerApi';
 import {
   getTranslation, translateCrop, translateGroup, translateSoil, translateSeason, translateWater, translateStage, translateWeatherCondition, translateDay
@@ -1054,65 +1054,201 @@ function SchemeEligibilityModal({ scheme, onClose }) {
   );
 }
 
-// AI Field Assistant Chat Drawer
-function AIChatDrawer({ onClose }) {
+// AI Kisan Assistant Floating Chatbot Component
+function KisanChatbot({ lang }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  
+  // Provider settings stored in localStorage
+  const [provider, setProvider] = useState(() => localStorage.getItem('growva_chat_provider') || 'openrouter');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('growva_chat_key') || '');
+  const [model, setModel] = useState(() => localStorage.getItem('growva_chat_model') || 'z-ai/glm-5.2:free');
+  
+  const [inputMsg, setInputMsg] = useState('');
+  const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([
-    { sender: 'bot', text: 'Hello! I am Growva AI Field Assistant 🌾. Ask me anything about crop suitability, sowing windows, disease remedies, or APMC mandi prices!' }
+    {
+      role: 'assistant',
+      content: '🌾 **Namaste! I am Kisan Sahayak**, your AI agricultural advisor on Growva.\n\nAsk me about crop sowing, weather forecasts, leaf diseases, mandi rates, or PM-KISAN schemes!'
+    }
   ]);
-  const [input, setInput] = useState('');
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    const userMsg = { sender: 'user', text: input };
-    setMessages(prev => [...prev, userMsg]);
-    const userQuery = input.toLowerCase();
-    setInput('');
+  const messagesEndRef = React.useRef(null);
 
-    setTimeout(() => {
-      let reply = "I am analyzing your query with Growva's agricultural intelligence engine.";
-      if (userQuery.includes('groundnut') || userQuery.includes('sow')) {
-        reply = "For Vadodara, Gujarat, groundnut sowing window is highly favorable right now! Sowing after the next rain window within 3–5 days will give optimal germination.";
-      } else if (userQuery.includes('disease') || userQuery.includes('yellow') || userQuery.includes('spot')) {
-        reply = "For leaf yellowing or blight spots on crops, spray Neem oil extract (5ml/L water) organically or apply Mancozeb 75 WP (2.5g/L water).";
-      } else if (userQuery.includes('mandi') || userQuery.includes('price')) {
-        reply = "Current APMC rates: Groundnut in Rajkot Mandi is ₹6,200/quintal, Cumin in Unjha Mandi is ₹23,000/quintal, and Wheat in Bavla Mandi is ₹2,600/quintal.";
-      } else if (userQuery.includes('scheme') || userQuery.includes('kisan')) {
-        reply = "PM-KISAN provides direct benefit transfer of ₹6,000/year to landholding farmers. Check eligibility under the Schemes section!";
-      } else {
-        reply = `Growva recommendation for "${userQuery}": Consult local soil moisture levels and ensure balanced N-P-K fertilizer application for target yield.`;
-      }
-      setMessages(prev => [...prev, { sender: 'bot', text: reply }]);
-    }, 600);
+  useEffect(() => {
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isOpen]);
+
+  const handleProviderChange = (newProvider) => {
+    setProvider(newProvider);
+    localStorage.setItem('growva_chat_provider', newProvider);
+    if (newProvider === 'openrouter') {
+      const defaultModel = 'z-ai/glm-5.2:free';
+      setModel(defaultModel);
+      localStorage.setItem('growva_chat_model', defaultModel);
+    } else if (newProvider === 'google') {
+      const defaultModel = 'gemini-1.5-flash';
+      setModel(defaultModel);
+      localStorage.setItem('growva_chat_model', defaultModel);
+    }
   };
 
+  const handleKeyChange = (newKey) => {
+    setApiKey(newKey);
+    localStorage.setItem('growva_chat_key', newKey);
+  };
+
+  const handleSend = async (textToSend) => {
+    const text = textToSend || inputMsg;
+    if (!text.trim() || loading) return;
+
+    const userMsg = { role: 'user', content: text.trim() };
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
+    setInputMsg('');
+    setLoading(true);
+
+    try {
+      const response = await sendChatMessage(updatedMessages, provider, apiKey, model);
+      setMessages(prev => [...prev, { role: 'assistant', content: response.reply, meta: response.provider_used }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'assistant', content: "⚠️ Connection error. Please check your network or API key settings." }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const quickPrompts = [
+    "🌾 What crop to plant this season?",
+    "🌧️ Weather forecast for sowing",
+    "🥭 How to cure Mango leaf spots?",
+    "💰 Today's Mandi Prices",
+    "📜 PM-KISAN subsidy details"
+  ];
+
   return (
-    <div className="chat-drawer">
-      <div className="chat-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Bot size={18} /> Growva AI Field Assistant
-        </div>
-        <button onClick={onClose} style={{ border: 0, background: 'transparent', color: 'white' }}><X size={18} /></button>
-      </div>
+    <>
+      {/* Floating Action Button (FAB) */}
+      <button className="kisan-fab" onClick={() => setIsOpen(!isOpen)} title="Open AI Kisan Assistant">
+        <div className="kisan-fab-pulse" />
+        <Bot size={22} style={{ color: '#80e66c' }} />
+        <span style={{ fontWeight: 700, fontSize: 13 }}>AI Kisan Sahayak</span>
+      </button>
 
-      <div className="chat-body">
-        {messages.map((m, i) => (
-          <div key={i} className={`chat-msg ${m.sender}`}>
-            {m.text}
+      {/* Floating Chat Box Window */}
+      {isOpen && (
+        <div className="kisan-chat-window">
+          {/* Header */}
+          <div className="chat-header">
+            <div className="chat-title-box">
+              <div className="chat-bot-avatar">
+                <Bot size={20} />
+              </div>
+              <div>
+                <div className="chat-title">AI Kisan Sahayak</div>
+                <div className="chat-subtitle">
+                  <span className="status-dot" /> Online • {provider === 'openrouter' ? 'OpenRouter' : 'Google Gemini'}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <button
+                onClick={() => setShowConfig(!showConfig)}
+                style={{ background: showConfig ? 'rgba(184, 220, 159, 0.25)' : 'transparent', border: 0, color: '#b8dc9f', cursor: 'pointer', padding: 6, borderRadius: 8 }}
+                title="LLM Provider & Key Settings"
+              >
+                <Settings size={18} />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                style={{ background: 'transparent', border: 0, color: '#fff', cursor: 'pointer', padding: 6 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
-        ))}
-      </div>
 
-      <div className="chat-input-row">
-        <input
-          type="text"
-          placeholder="Ask farming question..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-        />
-        <button onClick={handleSend}><Send size={15} /></button>
-      </div>
-    </div>
+          {/* Config Bar (Provider & API Key Box over Chatbox) */}
+          {showConfig && (
+            <div className="chat-config-bar">
+              <div className="config-label">1. Select AI Provider</div>
+              <select
+                className="config-select"
+                value={provider}
+                onChange={(e) => handleProviderChange(e.target.value)}
+              >
+                <option value="openrouter">OpenRouter (Default: z-ai/glm-5.2:free)</option>
+                <option value="google">Google Gemini (Default: gemini-1.5-flash)</option>
+              </select>
+
+              <div className="config-label" style={{ marginTop: 8 }}>
+                2. API Key ({provider === 'openrouter' ? 'OpenRouter Key sk-or-v1...' : 'Google Gemini Key'})
+              </div>
+              <input
+                type="password"
+                className="config-input"
+                placeholder={provider === 'openrouter' ? 'Paste OpenRouter Key (sk-or-v1...)' : 'Paste Google Gemini Key'}
+                value={apiKey}
+                onChange={(e) => handleKeyChange(e.target.value)}
+              />
+
+              <div style={{ fontSize: 10, color: '#b8dc9f', opacity: 0.85, marginTop: 6 }}>
+                ⚡ Active Model: <b>{model}</b> {!apiKey && '(Demo Key Active)'}
+              </div>
+            </div>
+          )}
+
+          {/* Messages Area */}
+          <div className="chat-messages-area">
+            {messages.map((m, idx) => (
+              <div key={idx} className={`msg-wrapper ${m.role}`}>
+                <div className="msg-bubble">{m.content}</div>
+                {m.meta && <div className="msg-meta">via {m.meta}</div>}
+              </div>
+            ))}
+            {loading && (
+              <div className="msg-wrapper assistant">
+                <div className="msg-bubble" style={{ opacity: 0.8 }}>
+                  <Sparkles size={14} style={{ display: 'inline-block', marginRight: 6, animation: 'spin 2s linear infinite' }} />
+                  Thinking & consulting agricultural knowledge...
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Suggestions Chips */}
+          <div className="chat-quick-suggestions">
+            {quickPrompts.map(qp => (
+              <button key={qp} className="chip-btn" onClick={() => handleSend(qp)}>
+                {qp}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Bar */}
+          <div className="chat-input-bar">
+            <input
+              type="text"
+              className="chat-input-field"
+              placeholder="Ask Kisan Sahayak in English or Hindi..."
+              value={inputMsg}
+              onChange={(e) => setInputMsg(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            />
+            <button
+              className="chat-send-btn"
+              onClick={() => handleSend()}
+              disabled={loading || !inputMsg.trim()}
+            >
+              <Send size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1338,9 +1474,8 @@ function App() {
         )}
       </AnimatePresence>
 
-      {showChat && (
-        <AIChatDrawer onClose={() => setShowChat(false)} />
-      )}
+      {/* Floating AI Kisan Sahayak Chatbot */}
+      <KisanChatbot lang={lang} />
     </div>
   );
 }
