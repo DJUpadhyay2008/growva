@@ -121,7 +121,7 @@ export async function fetchMarketAnalysis(locationName = 'Vadodara, Gujarat', cr
       { market: "Rajkot APMC", district: "Rajkot", state: "Gujarat", modal: 6750, dist: 220, variety: "Bold / Java" },
       { market: "Anand APMC", district: "Anand", state: "Gujarat", modal: 6250, dist: 45, variety: "Local" },
       { market: "Vadodara APMC", district: "Vadodara", state: "Gujarat", modal: 6100, dist: 20, variety: "Medium" },
-      { market: "Ahmedabad APMC", district: "Ahmedabad", state: "Gujarat", modal: 110, variety: "Bold" }
+      { market: "Ahmedabad APMC", district: "Ahmedabad", state: "Gujarat", modal: 6300, variety: "Bold" }
     ];
 
     const evaluated = baseMarkets.map(m => {

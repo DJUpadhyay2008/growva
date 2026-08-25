@@ -504,6 +504,11 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
     return defaultCropList;
   }, [crop, defaultCropList]);
 
+  const fmtNum = (v) => {
+    const n = Number(v);
+    return isNaN(n) ? '0' : Math.round(n).toLocaleString();
+  };
+
   const runAnalysis = useCallback(async (locOverride, cropOverride, qtyOverride, radiusOverride) => {
     const loc = locOverride !== undefined ? locOverride : farmerLocation;
     const crp = cropOverride !== undefined ? cropOverride : crop;
@@ -513,7 +518,7 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
     setLoading(true);
     try {
       const res = await fetchMarketAnalysis(loc, crp, qty, rad);
-      if (res && res.best_market) {
+      if (res && (res.best_market || (res.markets && res.markets.length > 0))) {
         setAnalysis(res);
       }
     } catch (err) {
@@ -529,7 +534,7 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
     runAnalysis(initialLocation || farmerLocation, initialCrop || crop, quantityQuintals, radiusKm);
   }, [initialCrop, initialLocation]);
 
-  const bestMarket = analysis?.best_market;
+  const bestMarket = analysis?.best_market || (analysis?.markets && analysis.markets[0]);
   const markets = analysis?.markets || [];
 
   return (
@@ -551,14 +556,14 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
             placeholder="e.g. Vadodara, Gujarat"
             value={farmerLocation}
             onChange={(e) => setFarmerLocation(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && runAnalysis(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && runAnalysis(e.target.value, crop, quantityQuintals, radiusKm)}
             style={{ width: '210px' }}
           />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <small style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700' }}>Select Crop</small>
-          <select value={crop} onChange={(e) => { setCrop(e.target.value); runAnalysis(farmerLocation, e.target.value); }}>
+          <select value={crop} onChange={(e) => { setCrop(e.target.value); runAnalysis(farmerLocation, e.target.value, quantityQuintals, radiusKm); }}>
             {cropOptions.map(c => (
               <option key={c} value={c}>{translateCrop(c, lang)} ({c})</option>
             ))}
@@ -573,7 +578,7 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
             max="1000"
             value={quantityQuintals}
             onChange={(e) => setQuantityQuintals(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && runAnalysis()}
+            onKeyDown={(e) => e.key === 'Enter' && runAnalysis(farmerLocation, crop, e.target.value, radiusKm)}
             style={{ width: '130px' }}
           />
         </div>
@@ -588,7 +593,7 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
           </select>
         </div>
 
-        <button onClick={() => runAnalysis()} disabled={loading} style={{ marginTop: '18px' }}>
+        <button onClick={() => runAnalysis(farmerLocation, crop, quantityQuintals, radiusKm)} disabled={loading} style={{ marginTop: '18px' }}>
           <TrendingUp size={15} /> {loading ? (t.mandi_fetching || 'Calculating...') : 'Compare Markets'}
         </button>
       </div>
@@ -600,9 +605,9 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
             <span className="mandi-hero-tag">
               🏆 RANK 1 APMC: HIGHEST ESTIMATED NET REALIZATION
             </span>
-            {analysis.potential_additional_realization > 0 && (
+            {(analysis?.potential_additional_realization || 0) > 0 && (
               <span className="net-profit-badge">
-                +₹{analysis.potential_additional_realization.toLocaleString()} Net Gain vs Local APMC
+                +₹{fmtNum(analysis.potential_additional_realization)} Net Gain vs Local APMC
               </span>
             )}
           </div>
@@ -611,31 +616,31 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
             {bestMarket.market} <small style={{ fontSize: '18px', fontWeight: '400', opacity: 0.8 }}>({bestMarket.district}, {bestMarket.state})</small>
           </h3>
           <div className="mandi-hero-subtitle">
-            <MapPin size={14} /> {bestMarket.distance_km} km distance from {analysis.farmer_location} &bull; Commodity: <b>{translateCrop(bestMarket.commodity, lang)} ({bestMarket.variety})</b>
+            <MapPin size={14} /> {bestMarket.distance_km} km distance from {analysis?.farmer_location || farmerLocation} &bull; Commodity: <b>{translateCrop(bestMarket.commodity, lang)} ({bestMarket.variety})</b>
           </div>
 
           <div className="mandi-hero-grid">
             <div className="mandi-metric-card">
               <small>Modal APMC Price</small>
-              <strong>₹{bestMarket.modal_price.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '400' }}>/ quintal</span></strong>
+              <strong>₹{fmtNum(bestMarket.modal_price)} <span style={{ fontSize: '11px', fontWeight: '400' }}>/ quintal</span></strong>
             </div>
             <div className="mandi-metric-card">
               <small>Distance & Transport</small>
-              <strong>{bestMarket.distance_km} km <span style={{ fontSize: '11px', fontWeight: '400' }}>(₹{bestMarket.transport_cost.toLocaleString()} total)</span></strong>
+              <strong>{bestMarket.distance_km} km <span style={{ fontSize: '11px', fontWeight: '400' }}>(₹{fmtNum(bestMarket.transport_cost)} total)</span></strong>
             </div>
             <div className="mandi-metric-card">
               <small>Gross Market Value</small>
-              <strong>₹{bestMarket.gross_revenue.toLocaleString()}</strong>
+              <strong>₹{fmtNum(bestMarket.gross_revenue)}</strong>
             </div>
             <div className="mandi-metric-card highlight">
               <small>Est. Net Realization</small>
-              <strong>₹{bestMarket.net_realization.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '400' }}>(₹{bestMarket.net_realization_per_quintal.toLocaleString()}/q)</span></strong>
+              <strong>₹{fmtNum(bestMarket.net_realization)} <span style={{ fontSize: '11px', fontWeight: '400' }}>(₹{fmtNum(bestMarket.net_realization_per_quintal)}/q)</span></strong>
             </div>
           </div>
 
           <div className="mandi-hero-narrative">
             <b style={{ color: '#80e66c' }}>💡 Intelligence Insight: </b>
-            {analysis.analysis_summary}
+            {analysis?.analysis_summary}
           </div>
 
           <div style={{ marginTop: '14px', display: 'flex', gap: '16px', fontSize: '11px', color: '#b4d8b9' }}>
@@ -656,7 +661,7 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
                 <th>APMC Mandi</th>
                 <th>Distance</th>
                 <th>Modal Price</th>
-                <th>Gross Revenue ({analysis?.quantity_quintals}q)</th>
+                <th>Gross Revenue ({analysis?.quantity_quintals || quantityQuintals}q)</th>
                 <th>Est. Transport Cost</th>
                 <th>Est. Net Realization</th>
                 <th>Net Return / Q</th>
@@ -672,14 +677,14 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
                     <b>{m.market}</b> <small style={{ color: 'var(--muted)' }}>({m.district})</small>
                   </td>
                   <td>{m.distance_km} km</td>
-                  <td>₹{m.modal_price.toLocaleString()}</td>
-                  <td>₹{m.gross_revenue.toLocaleString()}</td>
-                  <td style={{ color: '#c62828' }}>-₹{m.transport_cost.toLocaleString()}</td>
+                  <td>₹{fmtNum(m.modal_price)}</td>
+                  <td>₹{fmtNum(m.gross_revenue)}</td>
+                  <td style={{ color: '#c62828' }}>-₹{fmtNum(m.transport_cost)}</td>
                   <td>
-                    <b style={{ color: m.rank === 1 ? '#1b5e20' : 'var(--ink)' }}>₹{m.net_realization.toLocaleString()}</b>
+                    <b style={{ color: m.rank === 1 ? '#1b5e20' : 'var(--ink)' }}>₹{fmtNum(m.net_realization)}</b>
                   </td>
                   <td>
-                    <b>₹{m.net_realization_per_quintal.toLocaleString()}</b>
+                    <b>₹{fmtNum(m.net_realization_per_quintal)}</b>
                   </td>
                 </tr>
               ))}
@@ -707,18 +712,18 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <small style={{ display: 'block', fontSize: 10, color: 'var(--muted)' }}>Modal Price</small>
-                  <div className="mandi-modal-price">₹{item.modal_price.toLocaleString()} <small>{t.mandi_per_quintal || '/ q'}</small></div>
+                  <div className="mandi-modal-price">₹{fmtNum(item.modal_price)} <small>{t.mandi_per_quintal || '/ q'}</small></div>
                 </div>
                 <div className="mandi-range">
-                  <div>Min: ₹{item.min_price}</div>
-                  <div>Max: ₹{item.max_price}</div>
+                  <div>Min: ₹{fmtNum(item.min_price)}</div>
+                  <div>Max: ₹{fmtNum(item.max_price)}</div>
                   <div style={{ color: 'var(--green)', fontWeight: 700, marginTop: 2 }}>{item.price_date}</div>
                 </div>
               </div>
 
               <div style={{ borderTop: '1px solid var(--line)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                <span>Logistics Cost: <b style={{ color: '#c62828' }}>₹{item.transport_cost.toLocaleString()}</b></span>
-                <span>Net Return: <b style={{ color: 'var(--green)' }}>₹{item.net_realization.toLocaleString()}</b></span>
+                <span>Logistics Cost: <b style={{ color: '#c62828' }}>₹{fmtNum(item.transport_cost)}</b></span>
+                <span>Net Return: <b style={{ color: 'var(--green)' }}>₹{fmtNum(item.net_realization)}</b></span>
               </div>
             </div>
           </motion.div>
