@@ -2,7 +2,7 @@ import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, CalendarDays, CheckCircle2, CloudRain, Droplets, Globe2, Leaf, MapPin, Menu, Mic, Recycle, Search, ShieldCheck, Sprout, Sun, TrendingUp, Wind, X, FileText, DollarSign, AlertTriangle, Send, Bot, User, ExternalLink, ChevronRight, Info, Sparkles, Camera, UploadCloud, Image, FileImage, Settings
+  ArrowRight, CalendarDays, CheckCircle2, CloudRain, Droplets, Globe2, Leaf, MapPin, Menu, Mic, Recycle, Search, ShieldCheck, Sprout, Sun, TrendingUp, Wind, X, FileText, DollarSign, AlertTriangle, Send, Bot, User, ExternalLink, ChevronRight, Info, Sparkles, Camera, UploadCloud, Image, FileImage, Settings, ImageOff
 } from 'lucide-react';
 import './styles.css';
 import {
@@ -30,94 +30,48 @@ const groups = {
   Spices: ['Turmeric','Ginger','Cumin','Coriander','Black Pepper','Cardamom','Clove','Cinnamon','Fenugreek','Mustard','Fennel','Ajwain','Chilli','Saffron','Nutmeg','Mace','Star Anise','Tamarind','Bay Leaf','Curry Leaf','Asafoetida','Poppy Seed','Sesame','Dill','Black Cumin']
 };
 
-const photo = {
-  Wheat: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80',
-  Rice: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=800&q=80',
-  Bajra: 'https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=800&q=80',
-  Maize: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=800&q=80',
-  Barley: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
-  Jowar: 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a81?auto=format&fit=crop&w=800&q=80',
-  Ragi: 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80',
-  Oats: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80',
-  Sorghum: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80',
-  Quinoa: 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80',
-  Buckwheat: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
-  Amaranth: 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?auto=format&fit=crop&w=800&q=80',
-  FoxtailMillet: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80',
-  LittleMillet: 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80',
-  KodoMillet: 'https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=800&q=80',
-  BarnyardMillet: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
-  Sugarcane: 'https://images.unsplash.com/photo-1593105544559-ecb03bf26240?auto=format&fit=crop&w=800&q=80',
-  Cotton: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=800&q=80'
-};
+function getCropSlug(name) {
+  if (!name) return 'wheat';
+  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+}
 
-const userProvidedPhoto = {
-  Oats:'/crops/user-provided/oats.jpeg',Turnip:'/crops/user-provided/turnip.jpeg',SweetPotato:'/crops/user-provided/sweet-potato.jpeg',Yam:'/crops/user-provided/yam.jpeg',Taro:'/crops/user-provided/taro.jpeg',Colocasia:'/crops/user-provided/colocasia.jpeg',Lettuce:'/crops/user-provided/lettuce.jpeg',Celery:'/crops/user-provided/celery.jpeg',Mushroom:'/crops/user-provided/mushroom.jpeg',Zucchini:'/crops/user-provided/zucchini.jpeg',ClusterBean:'/crops/user-provided/cluster-bean.jpeg',IvyGourd:'/crops/user-provided/ivy-gourd.jpeg',SnakeGourd:'/crops/user-provided/snake-gourd.jpeg',AshGourd:'/crops/user-provided/ash-gourd.jpeg',Banana:'/crops/user-provided/banana.jpeg',Amla:'/crops/user-provided/amla.jpeg',Mosambi:'/crops/user-provided/mosambi.jpeg',Chikoo:'/crops/user-provided/chikoo.jpeg',Cumin:'/crops/user-provided/cumin.jpeg',Mustard:'/crops/user-provided/mustard.jpeg',Ajwain:'/crops/user-provided/ajwain.jpeg',Saffron:'/crops/user-provided/saffron.jpeg',Sesame:'/crops/user-provided/sesame.jpeg'
-};
+const userProvidedSlugs = new Set([
+  'ajwain', 'amla', 'ash-gourd', 'banana', 'celery', 'chikoo',
+  'cluster-bean', 'colocasia', 'cumin', 'ivy-gourd', 'lettuce',
+  'mosambi', 'mushroom', 'mustard', 'oats', 'saffron', 'sesame',
+  'snake-gourd', 'sweet-potato', 'taro', 'turnip', 'yam', 'zucchini'
+]);
 
-const localPhoto = {
-  Bajra:'/crops/Bajra.jpeg',Tomato:'/crops/tomato.jpg',Okra:'/crops/okra.jpg',Brinjal:'/crops/brinjal.jpg',Potato:'/crops/potato.jpg',Cauliflower:'/crops/cauliflower.jpg',Cabbage:'/crops/cabbage.jpg',Cucumber:'/crops/cucumber.jpg',Radish:'/crops/radish.jpg',Carrot:'/crops/carrot.jpg','French Bean':'/crops/french-bean.jpg','Green Peas':'/crops/green-peas.jpg',Capsicum:'/crops/capsicum.jpg','Bitter Gourd':'/crops/bitter-gourd.jpg',Pumpkin:'/crops/pumpkin.jpg','Bottle Gourd':'/crops/bottle-gourd.jpg','Ridge Gourd':'/crops/ridge-gourd.jpg',Spinach:'/crops/spinach.jpg','Fenugreek Leaves':'/crops/fenugreek-leaves.jpg',Taro:'/crops/taro.jpg',Corn:'/crops/corn.jpg',Beetroot:'/crops/beetroot.jpg',Colocasia:'/crops/colocasia.jpg','Green Chilli':'/crops/green-chilli.jpg',Apple:'/crops/apple.jpg',Orange:'/crops/orange.jpg',Banana:'/crops/banana.jpg',Apricot:'/crops/apricot.jpg',Plum:'/crops/plum.jpg',Lemon:'/crops/lemon.jpg',Peach:'/crops/peach.jpg',Cherries:'/crops/cherries.jpg',Kiwi:'/crops/kiwi.jpg',Grapes:'/crops/grapes.jpg',Watermelon:'/crops/watermelon.jpg',Strawberries:'/crops/strawberries.jpg',Blueberries:'/crops/blueberries.jpg','Dragon Fruit':'/crops/dragon-fruit.jpg',Melon:'/crops/melon.jpg',Pomegranate:'/crops/pomegranate.jpg',Pineapple:'/crops/pineapple.jpg',Lime:'/crops/lime.jpg',Raspberry:'/crops/raspberry.jpg',Mango:'/crops/mango.jpg',Fig:'/crops/fig.jpg',Coconut:'/crops/coconut.jpg',Avocado:'/crops/avocado.jpg',Dates:'/crops/dates.jpg','Blood Orange':'/crops/blood-orange.jpg',Persimmon:'/crops/persimmon.jpg','Star Fruit':'/crops/star-fruit.jpg',Papaya:'/crops/papaya.jpg',Guava:'/crops/guava.jpg',Cantaloupe:'/crops/cantaloupe.jpg'
-};
-
-const categoryPhotoPool = {
-  Crops: [
-    'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a81?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80'
-  ],
-  Pulses: [
-    'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=800&q=80'
-  ],
-  Vegetables: [
-    'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cf?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1598170845058-12ef4a457c7d?auto=format&fit=crop&w=800&q=80'
-  ],
-  Fruits: [
-    'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=800&q=80'
-  ],
-  Spices: [
-    'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=800&q=80',
-    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80'
-  ]
-};
-
-const fallback = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=80';
-const slug = s => s.replace(/[^a-zA-Z0-9]/g,'');
-
-function getDistinctPhoto(name, group) {
-  const s = slug(name);
-  if (userProvidedPhoto[s]) return userProvidedPhoto[s];
-  if (localPhoto[name]) return localPhoto[name];
-  if (photo[s]) return photo[s];
-  if (photo[name]) return photo[name];
-  
-  const pool = categoryPhotoPool[group] || categoryPhotoPool.Crops;
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+function getCropImage(name) {
+  const s = getCropSlug(name);
+  if (userProvidedSlugs.has(s)) {
+    return `/crops/user-provided/${s}.jpeg`;
   }
-  const idx = Math.abs(hash) % pool.length;
-  return pool[idx];
+  if (s === 'bajra') {
+    return '/crops/Bajra.jpeg';
+  }
+  if (s === 'corn') {
+    return '/crops/corn.jpg';
+  }
+  if (s === 'fenugreek-leaves') {
+    return '/crops/fenugreek-leaves.jpg';
+  }
+  return `/crops/${s}.jpg`;
+}
+
+function validateCropImages(items) {
+  if (!items || !Array.isArray(items)) return;
+  const seenSlugs = new Set();
+  items.forEach(item => {
+    const s = getCropSlug(item.name);
+    if (!item.image) {
+      console.warn(`[Crop Validation] Missing image for crop: ${item.name}`);
+    }
+    if (seenSlugs.has(s)) {
+      console.warn(`[Crop Validation] Duplicate crop slug found: ${s}`);
+    }
+    seenSlugs.add(s);
+  });
 }
 
 const cropDetailsExtra = {
@@ -139,7 +93,7 @@ const allItems = Object.entries(groups).flatMap(([group, names]) =>
   names.map(name => ({
     name,
     group,
-    image: getDistinctPhoto(name, group),
+    image: getCropImage(name),
     season: group === 'Fruits' ? 'Regional / perennial' : group === 'Spices' ? 'Monsoon / winter varies' : group === 'Vegetables' ? 'Year-round / seasonal' : 'Kharif / Rabi varies',
     soil: group === 'Vegetables' ? 'Fertile loam' : 'Well-drained loam',
     water: group === 'Vegetables' ? 'Medium–High' : 'Medium',
@@ -151,6 +105,8 @@ const allItems = Object.entries(groups).flatMap(([group, names]) =>
     byproduct: cropDetailsExtra[name]?.byproduct || 'Crop residue for compost & biochar'
   }))
 );
+
+validateCropImages(allItems);
 
 function Robot({ t, onOpenChat }) {
   const mx = useMotionValue(0), my = useMotionValue(0);
@@ -176,11 +132,18 @@ function Robot({ t, onOpenChat }) {
 }
 
 function CropCard({ item, t, lang, onSelect }) {
-  const [src, setSrc] = useState(item.image);
+  const [imgError, setImgError] = useState(false);
   return (
     <motion.div className="crop-card" whileHover={{ y: -6 }} onClick={() => onSelect(item)}>
       <div className="crop-photo">
-        <img src={src} onError={() => setSrc(getDistinctPhoto(item.name + ' alt', item.group))} alt={item.name} />
+        {!imgError ? (
+          <img src={item.image} onError={() => setImgError(true)} alt={item.name} />
+        ) : (
+          <div className="crop-image-unavailable">
+            <ImageOff size={24} />
+            <span>Image Unavailable</span>
+          </div>
+        )}
         <span>{translateGroup(item.group, lang)}</span>
       </div>
       <div className="crop-info">
@@ -1171,13 +1134,21 @@ function WasteSection({ t, lang }) {
 
 // Interactive Crop Details Modal
 function CropDetailModal({ crop, t, lang, onClose }) {
+  const [imgError, setImgError] = useState(false);
   if (!crop) return null;
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}><X size={20} /></button>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
-          <img src={crop.image} onError={(e) => e.target.src = fallback} alt={crop.name} style={{ width: 90, height: 90, borderRadius: 16, objectFit: 'cover' }} />
+          {!imgError ? (
+            <img src={crop.image} onError={() => setImgError(true)} alt={crop.name} style={{ width: 90, height: 90, borderRadius: 16, objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: 90, height: 90, borderRadius: 16, background: '#f4f7f2', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 10, fontWeight: 700, gap: 4 }}>
+              <ImageOff size={20} />
+              <span>No Image</span>
+            </div>
+          )}
           <div>
             <span style={{ fontSize: 10, background: 'var(--mint)', color: 'var(--green)', padding: '4px 8px', borderRadius: 8, fontWeight: 700, textTransform: 'uppercase' }}>
               {translateGroup(crop.group, lang)}
