@@ -741,50 +741,6 @@ const diseaseSamples = [
     chemicalTreatment: 'Apply Metalaxyl + Mancozeb (2.5g/L water).',
     preventiveMeasures: 'Use certified disease-free seed tubers and earth up soil well.',
     category: 'Oomycete'
-  },
-  {
-    id: 'rice-blast',
-    diseaseName: 'Rice Blast',
-    crop: 'Rice',
-    image: '/diseases/rice-blast.jpg',
-    symptoms: ['Spindle-shaped grey spots', 'Reddish-brown margins', 'Nodal neck rot'],
-    organicTreatment: 'Apply Pseudomonas fluorescens (10g/L water) bio-agent.',
-    chemicalTreatment: 'Spray Tricyclazole 75 WP (0.6g/L water).',
-    preventiveMeasures: 'Avoid excess nitrogen application and maintain proper water management.',
-    category: 'Fungal'
-  },
-  {
-    id: 'cotton-leaf-disease',
-    diseaseName: 'Cotton Leaf Curl',
-    crop: 'Cotton',
-    image: '/diseases/cotton-leaf-disease.jpg',
-    symptoms: ['Upward leaf curling', 'Vein thickening', 'Stunted plant growth'],
-    organicTreatment: 'Control whitefly vectors using yellow sticky traps & Neem oil (5ml/L).',
-    chemicalTreatment: 'Spray Imidacloprid 17.8 SL (0.3 ml/L water) for vector management.',
-    preventiveMeasures: 'Destroy weed hosts around field borders before planting.',
-    category: 'Viral'
-  },
-  {
-    id: 'bajra-downy-mildew',
-    diseaseName: 'Bajra Downy Mildew',
-    crop: 'Bajra',
-    image: '/diseases/bajra-downy-mildew.jpg',
-    symptoms: ['Chlorotic leaf striping', 'White downy underside growth', 'Green ear leaf malformation'],
-    organicTreatment: 'Seed treatment with Trichoderma viride (10g/kg seed).',
-    chemicalTreatment: 'Seed treatment with Metalaxyl-M 35% WS (6g/kg seed).',
-    preventiveMeasures: 'Rogue out infected green-ear plants early in the season.',
-    category: 'Oomycete'
-  },
-  {
-    id: 'mustard-white-rust',
-    diseaseName: 'Mustard White Rust',
-    crop: 'Mustard',
-    image: '/diseases/mustard-white-rust.jpg',
-    symptoms: ['White raised pustules', 'Leaf blade distortion', 'Staghead floral malformation'],
-    organicTreatment: 'Foliar spray of garlic bulb extract (5%) or Trichoderma formulation.',
-    chemicalTreatment: 'Spray Mancozeb 75 WP (2g/L water) or Ridomil Gold.',
-    preventiveMeasures: 'Destroy crop residue after harvest and maintain wide row spacing.',
-    category: 'Oomycete'
   }
 ];
 
