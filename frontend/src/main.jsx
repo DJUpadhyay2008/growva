@@ -2,7 +2,7 @@ import React, { useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import { createRoot } from 'react-dom/client';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, CalendarDays, CheckCircle2, CloudRain, Droplets, Globe2, Leaf, MapPin, Menu, Mic, Recycle, Search, ShieldCheck, Sprout, Sun, TrendingUp, Wind, X, FileText, DollarSign, AlertTriangle, Send, Bot, User, ExternalLink, ChevronRight, Info, Sparkles, Camera, UploadCloud, Image, FileImage, Settings, ImageOff
+  ArrowRight, CalendarDays, CheckCircle2, CloudRain, Droplets, Globe2, Leaf, MapPin, Menu, Mic, Recycle, Search, ShieldCheck, Sprout, Sun, TrendingUp, Wind, X, FileText, DollarSign, AlertTriangle, Send, Bot, User, ExternalLink, ChevronRight, ChevronLeft, Info, Sparkles, Camera, UploadCloud, Image, FileImage, Settings, ImageOff
 } from 'lucide-react';
 import './styles.css';
 import {
@@ -1642,6 +1642,8 @@ function App() {
   const [active, setActive] = useState('Dashboard');
   const [group, setGroup] = useState('All');
   const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [menu, setMenu] = useState(false);
 
   const [selectedCropModal, setSelectedCropModal] = useState(null);
@@ -1652,6 +1654,16 @@ function App() {
   const [marketLocation, setMarketLocation] = useState('Vadodara, Gujarat');
 
   const isClickingRef = useRef(false);
+
+  const handleQueryChange = (val) => {
+    setQuery(val);
+    setPage(1);
+  };
+
+  const handleGroupChange = (g) => {
+    setGroup(g);
+    setPage(1);
+  };
 
   const handleSelectMarketCrop = (cropName, loc) => {
     if (cropName) setMarketCrop(cropName);
@@ -1712,6 +1724,48 @@ function App() {
     allItems.filter(x => (group === 'All' || x.group === group) && x.name.toLowerCase().includes(query.toLowerCase())),
     [group, query]
   );
+
+  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+
+  const paginatedCrops = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filtered.slice(start, start + pageSize);
+  }, [filtered, page, pageSize]);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+      document.getElementById('crop-library')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const renderPaginationButtons = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    let startPage = Math.max(1, page - 2);
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    if (startPage > 1) {
+      pages.push(1);
+      if (startPage > 2) pages.push('...');
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) pages.push('...');
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
 
   const go = (key) => {
     setActive(key);
@@ -1840,8 +1894,18 @@ function App() {
           </div>
           <div className="search">
             <Search size={18} />
-            <input value={query} onChange={e => setQuery(e.target.value)} placeholder={t.lib_search_ph || t.search} />
-            <button aria-label="Voice search"><Mic size={16} /></button>
+            <input
+              value={query}
+              onChange={e => handleQueryChange(e.target.value)}
+              placeholder={t.lib_search_ph || t.search || 'Search 120+ crops (e.g. Wheat, Mango, Tomato)...'}
+            />
+            {query ? (
+              <button aria-label="Clear search" onClick={() => handleQueryChange('')} style={{ background: 'transparent', color: 'var(--muted)' }}>
+                <X size={16} />
+              </button>
+            ) : (
+              <button aria-label="Voice search"><Mic size={16} /></button>
+            )}
           </div>
         </div>
 
@@ -1851,7 +1915,7 @@ function App() {
               <span>PRODUCE GUIDE</span>
               <h3>{t.lib_veg_title || 'Indian Vegetables'}</h3>
               <p>{t.lib_veg_desc || 'Explore seasonal soil, irrigation, and yield metrics for Indian vegetables.'}</p>
-              <button onClick={() => setGroup("Vegetables")}>{t.lib_veg_btn || 'View vegetables'} <ArrowRight size={15} /></button>
+              <button onClick={() => handleGroupChange("Vegetables")}>{t.lib_veg_btn || 'View vegetables'} <ArrowRight size={15} /></button>
             </div>
             <img src={vegetableGuide} alt="Indian vegetables guide" />
           </article>
@@ -1860,31 +1924,89 @@ function App() {
               <span>PRODUCE GUIDE</span>
               <h3>{t.lib_fruit_title || 'Fruits Collection'}</h3>
               <p>{t.lib_fruit_desc || 'Explore perennial fruit orchards, harvest cycles, and market prices.'}</p>
-              <button onClick={() => setGroup("Fruits")}>{t.lib_fruit_btn || 'View fruits'} <ArrowRight size={15} /></button>
+              <button onClick={() => handleGroupChange("Fruits")}>{t.lib_fruit_btn || 'View fruits'} <ArrowRight size={15} /></button>
             </div>
             <img src={fruitGuide} alt="Fruit reference" />
           </article>
         </div>
 
         <div className="tabs">
-          <button className={group === 'All' ? 'selected' : ''} onClick={() => setGroup('All')}>
+          <button className={group === 'All' ? 'selected' : ''} onClick={() => handleGroupChange('All')}>
             {t.lib_all || 'All'} ({allItems.length})
           </button>
           {Object.keys(groups).map(g => (
-            <button className={group === g ? 'selected' : ''} onClick={() => setGroup(g)} key={g}>
+            <button className={group === g ? 'selected' : ''} onClick={() => handleGroupChange(g)} key={g}>
               {translateGroup(g, lang)} ({groups[g].length})
             </button>
           ))}
         </div>
 
-        <div className="crop-grid">
-          {filtered.slice(0, 48).map(x => (
-            <CropCard item={x} t={t} lang={lang} key={x.name} onSelect={setSelectedCropModal} />
-          ))}
-        </div>
+        {paginatedCrops.length > 0 ? (
+          <div className="crop-grid">
+            {paginatedCrops.map(x => (
+              <CropCard item={x} t={t} lang={lang} key={x.name} onSelect={setSelectedCropModal} />
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '50px 20px', background: '#f8faf6', borderRadius: 20, border: '1px solid var(--line)' }}>
+            <Search size={40} style={{ color: 'var(--muted)', marginBottom: 12 }} />
+            <h3 style={{ margin: '0 0 6px' }}>No matching crops found</h3>
+            <p style={{ color: 'var(--muted)', fontSize: 12, margin: '0 0 16px' }}>Try searching for another crop name or clear your category filter.</p>
+            <button onClick={() => { handleQueryChange(''); handleGroupChange('All'); }} style={{ background: 'var(--green)', color: 'white', border: 0, padding: '8px 16px', borderRadius: 10, fontWeight: 700, fontSize: 12 }}>
+              Reset Search & Filters
+            </button>
+          </div>
+        )}
 
-        <div className="library-foot">
-          {t.lib_showing || 'Showing'} {Math.min(filtered.length, 48)} {t.lib_of || 'of'} {filtered.length} {t.lib_matching || 'matching crop profiles.'}
+        {/* Interactive Pagination Bar */}
+        <div className="crop-pagination-bar">
+          <div className="pagination-info">
+            Showing <b>{filtered.length === 0 ? 0 : (page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)}</b> of <b>{filtered.length}</b> crop profiles
+            {query && <span> for "<b>{query}</b>"</span>}
+          </div>
+
+          <div className="pagination-controls">
+            <button
+              className="page-btn"
+              disabled={page <= 1}
+              onClick={() => handlePageChange(page - 1)}
+              title="Previous Page"
+            >
+              <ChevronLeft size={16} /> Prev
+            </button>
+
+            {renderPaginationButtons().map((p, idx) => (
+              typeof p === 'number' ? (
+                <button
+                  key={idx}
+                  className={`page-btn ${page === p ? 'active' : ''}`}
+                  onClick={() => handlePageChange(p)}
+                >
+                  {p}
+                </button>
+              ) : (
+                <span key={idx} style={{ padding: '0 4px', color: 'var(--muted)', fontSize: 12 }}>...</span>
+              )
+            ))}
+
+            <button
+              className="page-btn"
+              disabled={page >= totalPages}
+              onClick={() => handlePageChange(page + 1)}
+              title="Next Page"
+            >
+              Next <ChevronRight size={16} />
+            </button>
+          </div>
+
+          <div className="page-size-selector">
+            <span>Show:</span>
+            <select value={pageSize} onChange={e => { setPageSize(Number(e.target.value)); setPage(1); }}>
+              <option value={10}>10 crops per page</option>
+              <option value={20}>20 crops per page</option>
+              <option value={50}>50 crops per page</option>
+            </select>
+          </div>
         </div>
       </section>
 
