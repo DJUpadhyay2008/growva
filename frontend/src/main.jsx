@@ -804,7 +804,26 @@ function DiseaseSection({ t, lang }) {
   const [result, setResult] = useState(null);
 
   const sampleCrops = ['Tomato', 'Wheat', 'Cotton', 'Potato', 'Rice', 'Bajra', 'Mustard', 'Mango'];
+  const cropSymptomMap = {
+    Tomato: ['Concentric dark target rings', 'Yellow chlorotic halo', 'Lower leaves wilting', 'Water-soaked spots on stems', 'Fruit rot & dark patches'],
+    Wheat: ['Striped yellow pustules', 'Powdery orange spore streaks', 'Leaf chlorosis & yellowing', 'Glume blotch & head lesions'],
+    Cotton: ['Upward leaf curling', 'Vein thickening & enation', 'Stunted plant growth', 'Reddish brown angular spots'],
+    Potato: ['Water-soaked brown leaf lesions', 'Pale yellow margins', 'White mildew on underside', 'Rapid foliage collapse'],
+    Rice: ['Spindle-shaped grey spots', 'Reddish-brown eye spot margins', 'Nodal neck rot', 'Leaf tip browning & drying'],
+    Bajra: ['Chlorotic leaf striping', 'White downy underside growth', 'Green ear leaf malformation', 'Ergot dark grains'],
+    Mustard: ['White raised pustules', 'Leaf blade distortion', 'Staghead shoot malformation', 'Powdery white patches'],
+    Mango: ['Dark brown necrotic spots', 'Black lesions & shot-holes', 'Twig dieback & withered tips', 'Blossom blight']
+  };
   const allSymptomTags = ['Yellow spots', 'Leaf curling', 'Concentric dark circles', 'Wilting stems', 'White pustules', 'Stunted growth', 'Fruit rot', 'Water-soaked spots'];
+
+  const availableSymptoms = cropName && cropSymptomMap[cropName] ? cropSymptomMap[cropName] : allSymptomTags;
+
+  const handleCropSelect = (c) => {
+    setCropName(c);
+    const defaultSyms = cropSymptomMap[c] ? [cropSymptomMap[c][0], cropSymptomMap[c][1]] : [];
+    setSymptoms(defaultSyms);
+    setResult(null);
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -846,11 +865,11 @@ function DiseaseSection({ t, lang }) {
     setLoading(true);
     setResult(null);
     const symptomsStr = [...symptoms, customText].filter(Boolean).join(', ');
-    const targetCropToSend = diagMode === 'photo' ? (cropName || 'auto') : cropName;
+    const targetCropToSend = diagMode === 'photo' ? (cropName || 'auto') : (cropName || 'Tomato');
     try {
       const res = await diagnoseCropDisease(targetCropToSend, symptomsStr, selectedImage);
       // Ensure precise matching if user clicked one of the sample leaf reference photos
-      const matchedSample = diseaseSamples.find(s => s.image === selectedImage || s.crop.toLowerCase() === (cropName || '').toLowerCase());
+      const matchedSample = diseaseSamples.find(s => s.image === selectedImage || s.crop.toLowerCase() === (targetCropToSend || '').toLowerCase());
       if (matchedSample && (!res.diagnosed_disease || res.diagnosed_disease.includes('Leaf Blight & Spot Infection'))) {
         res.diagnosed_disease = matchedSample.diseaseName;
         res.crop_name = matchedSample.crop;
@@ -1004,16 +1023,26 @@ function DiseaseSection({ t, lang }) {
                   <button
                     key={c}
                     className={`sample-leaf-btn ${cropName === c ? 'active' : ''}`}
-                    onClick={() => setCropName(c)}
+                    onClick={() => handleCropSelect(c)}
                   >
                     <Leaf size={14} /> {translateCrop(c, lang)}
                   </button>
                 ))}
               </div>
 
-              <h3 style={{ margin: '14px 0 10px', fontSize: 16 }}>2. {t.disease_step2 || 'Select Observed Leaf Symptoms'}</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0 10px' }}>
+                <h3 style={{ margin: 0, fontSize: 16 }}>
+                  2. {t.disease_step2 ? t.disease_step2.replace(/^2\.\s*/, '') : 'Select Observed Leaf Symptoms'}
+                </h3>
+                {cropName && (
+                  <span style={{ fontSize: 11, background: 'var(--mint)', color: 'var(--green)', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>
+                    ⚡ {cropName} Specific
+                  </span>
+                )}
+              </div>
+
               <div className="symptom-tags">
-                {allSymptomTags.map(tag => (
+                {availableSymptoms.map(tag => (
                   <span
                     key={tag}
                     className={`symptom-tag ${symptoms.includes(tag) ? 'selected' : ''}`}
