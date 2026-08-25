@@ -492,31 +492,42 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
 
-  useEffect(() => {
-    if (initialCrop) setCrop(initialCrop);
-    if (initialLocation) setFarmerLocation(initialLocation);
-  }, [initialCrop, initialLocation]);
+  const defaultCropList = useMemo(() => [
+    'Groundnut', 'Wheat', 'Cotton', 'Rice', 'Cumin', 'Onion', 'Maize',
+    'Soybean', 'Chickpea', 'Pigeon Pea', 'Mustard', 'Sugarcane', 'Potato', 'Tomato'
+  ], []);
 
-  useEffect(() => {
-    runAnalysis();
-  }, [crop]);
+  const cropOptions = useMemo(() => {
+    if (crop && !defaultCropList.includes(crop)) {
+      return [crop, ...defaultCropList];
+    }
+    return defaultCropList;
+  }, [crop, defaultCropList]);
 
-  const runAnalysis = async () => {
+  const runAnalysis = useCallback(async (locOverride, cropOverride, qtyOverride, radiusOverride) => {
+    const loc = locOverride !== undefined ? locOverride : farmerLocation;
+    const crp = cropOverride !== undefined ? cropOverride : crop;
+    const qty = qtyOverride !== undefined ? qtyOverride : quantityQuintals;
+    const rad = radiusOverride !== undefined ? radiusOverride : radiusKm;
+
     setLoading(true);
     try {
-      const res = await fetchMarketAnalysis(farmerLocation, crop, quantityQuintals, radiusKm);
-      setAnalysis(res);
+      const res = await fetchMarketAnalysis(loc, crp, qty, rad);
+      if (res && res.best_market) {
+        setAnalysis(res);
+      }
     } catch (err) {
       console.error('Market analysis execution error:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [farmerLocation, crop, quantityQuintals, radiusKm]);
 
-  const cropOptions = [
-    'Groundnut', 'Wheat', 'Cotton', 'Rice', 'Cumin', 'Onion', 'Maize',
-    'Soybean', 'Chickpea', 'Pigeon Pea', 'Mustard', 'Sugarcane', 'Potato', 'Tomato'
-  ];
+  useEffect(() => {
+    if (initialCrop) setCrop(initialCrop);
+    if (initialLocation) setFarmerLocation(initialLocation);
+    runAnalysis(initialLocation || farmerLocation, initialCrop || crop, quantityQuintals, radiusKm);
+  }, [initialCrop, initialLocation]);
 
   const bestMarket = analysis?.best_market;
   const markets = analysis?.markets || [];
@@ -540,13 +551,14 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
             placeholder="e.g. Vadodara, Gujarat"
             value={farmerLocation}
             onChange={(e) => setFarmerLocation(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && runAnalysis(e.target.value)}
             style={{ width: '210px' }}
           />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <small style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700' }}>Select Crop</small>
-          <select value={crop} onChange={(e) => setCrop(e.target.value)}>
+          <select value={crop} onChange={(e) => { setCrop(e.target.value); runAnalysis(farmerLocation, e.target.value); }}>
             {cropOptions.map(c => (
               <option key={c} value={c}>{translateCrop(c, lang)} ({c})</option>
             ))}
@@ -561,13 +573,14 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
             max="1000"
             value={quantityQuintals}
             onChange={(e) => setQuantityQuintals(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && runAnalysis()}
             style={{ width: '130px' }}
           />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <small style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700' }}>Search Radius</small>
-          <select value={radiusKm} onChange={(e) => setRadiusKm(Number(e.target.value))} style={{ width: '130px' }}>
+          <select value={radiusKm} onChange={(e) => { const r = Number(e.target.value); setRadiusKm(r); runAnalysis(farmerLocation, crop, quantityQuintals, r); }} style={{ width: '130px' }}>
             <option value={100}>100 km</option>
             <option value={150}>150 km</option>
             <option value={250}>250 km</option>
@@ -575,7 +588,7 @@ function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'V
           </select>
         </div>
 
-        <button onClick={runAnalysis} disabled={loading} style={{ marginTop: '18px' }}>
+        <button onClick={() => runAnalysis()} disabled={loading} style={{ marginTop: '18px' }}>
           <TrendingUp size={15} /> {loading ? (t.mandi_fetching || 'Calculating...') : 'Compare Markets'}
         </button>
       </div>

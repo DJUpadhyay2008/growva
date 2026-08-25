@@ -93,29 +93,35 @@ export async function fetchMandiPrices(commodity = '', state = '', market = '') 
 }
 
 export async function fetchMarketAnalysis(locationName = 'Vadodara, Gujarat', crop = 'Groundnut', quantityQuintals = 10, radiusKm = 250) {
+  const locStr = (typeof locationName === 'object' && locationName !== null) ? (locationName.name || locationName.location || 'Vadodara, Gujarat') : String(locationName || 'Vadodara, Gujarat');
+  const cropStr = (typeof crop === 'object' && crop !== null) ? (crop.crop_name || crop.name || 'Groundnut') : String(crop || 'Groundnut');
+  const qty = Number(quantityQuintals) || 10;
+  const radius = Number(radiusKm) || 250;
+
   try {
     const res = await fetch(`${API_BASE_URL}/markets/market-analysis`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        location: { name: locationName },
-        crop: crop,
-        quantity_quintals: Number(quantityQuintals) || 10,
-        radius_km: Number(radiusKm) || 250
+        location: { name: locStr },
+        crop: cropStr,
+        quantity_quintals: qty,
+        radius_km: radius
       })
     });
     if (!res.ok) throw new Error(`Server status ${res.status}`);
-    return await res.json();
+    const data = await res.json();
+    if (!data || !data.best_market) throw new Error('Invalid backend payload structure');
+    return data;
   } catch (error) {
     console.warn('Backend Market Analysis API call failed, calculating local fallback analysis:', error);
     // Fallback mathematical calculation engine
-    const qty = Number(quantityQuintals) || 10;
     const baseMarkets = [
       { market: "Gondal APMC", district: "Rajkot", state: "Gujarat", modal: 6800, dist: 235, variety: "Bold" },
       { market: "Rajkot APMC", district: "Rajkot", state: "Gujarat", modal: 6750, dist: 220, variety: "Bold / Java" },
       { market: "Anand APMC", district: "Anand", state: "Gujarat", modal: 6250, dist: 45, variety: "Local" },
       { market: "Vadodara APMC", district: "Vadodara", state: "Gujarat", modal: 6100, dist: 20, variety: "Medium" },
-      { market: "Ahmedabad APMC", district: "Ahmedabad", state: "Gujarat", modal: 6300, dist: 110, variety: "Bold" }
+      { market: "Ahmedabad APMC", district: "Ahmedabad", state: "Gujarat", modal: 110, variety: "Bold" }
     ];
 
     const evaluated = baseMarkets.map(m => {
@@ -123,10 +129,11 @@ export async function fetchMarketAnalysis(locationName = 'Vadodara, Gujarat', cr
       const gross = m.modal * qty;
       const net = gross - trans;
       return {
+        rank: 1,
         market: m.market,
         district: m.district,
         state: m.state,
-        commodity: crop,
+        commodity: cropStr,
         variety: m.variety,
         modal_price: m.modal,
         min_price: Math.round(m.modal * 0.94),
@@ -154,12 +161,12 @@ export async function fetchMarketAnalysis(locationName = 'Vadodara, Gujarat', cr
     const addl = Math.max(0, best.net_realization - local.net_realization);
 
     return {
-      crop,
-      farmer_location: locationName,
+      crop: cropStr,
+      farmer_location: locStr,
       farmer_latitude: 22.3072,
       farmer_longitude: 73.1812,
       quantity_quintals: qty,
-      radius_km: radiusKm,
+      radius_km: radius,
       best_market: best,
       markets: evaluated,
       potential_additional_realization: addl,
