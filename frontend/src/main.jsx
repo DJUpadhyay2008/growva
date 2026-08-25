@@ -121,21 +121,19 @@ function CropCard({ item, t, lang, onSelect }) {
 
 function PlannerSection({ t, lang }) {
   const [locationInput, setLocationInput] = useState('Vadodara, Gujarat');
-  const [soilInput, setSoilInput] = useState('Fertile loam');
   const [loading, setLoading] = useState(false);
   const [plannerData, setPlannerData] = useState(null);
   const [selectedCropName, setSelectedCropName] = useState(null);
 
   useEffect(() => {
-    handleAnalyze('Vadodara, Gujarat', 'Fertile loam');
+    handleAnalyze('Vadodara, Gujarat');
   }, []);
 
-  const handleAnalyze = async (locToFetch, soilToFetch) => {
+  const handleAnalyze = async (locToFetch) => {
     const loc = locToFetch || locationInput || 'Vadodara, Gujarat';
-    const soil = soilToFetch || soilInput || 'Fertile loam';
     setLoading(true);
     try {
-      const data = await fetchCropRecommendations(loc, soil);
+      const data = await fetchCropRecommendations(loc);
       setPlannerData(data);
       if (data && data.top_recommendations && data.top_recommendations.length > 0) {
         setSelectedCropName(data.top_recommendations[0].crop_name);
@@ -156,12 +154,13 @@ function PlannerSection({ t, lang }) {
   }, [plannerData, selectedCropName]);
 
   const formatStageDate = (stage, index) => {
-    if (index === 0) return t.planner_this_week || 'This week';
-    const today = new Date();
-    const startDate = new Date(today);
-    startDate.setDate(today.getDate() + (stage.start_day || index * 10));
-    const endDate = new Date(today);
-    endDate.setDate(today.getDate() + (stage.end_day || (index + 1) * 10));
+    const recStartStr = selectedCrop?.sowing_window?.recommended_start;
+    const baseDate = recStartStr ? new Date(recStartStr) : new Date();
+    
+    const startDate = new Date(baseDate);
+    startDate.setDate(baseDate.getDate() + (stage.start_day || index * 10));
+    const endDate = new Date(baseDate);
+    endDate.setDate(baseDate.getDate() + (stage.end_day || (index + 1) * 10));
     const options = { day: 'numeric', month: 'short' };
     return `${startDate.toLocaleDateString(lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : 'en-US', options)} – ${endDate.toLocaleDateString(lang === 'gu' ? 'gu-IN' : lang === 'hi' ? 'hi-IN' : 'en-US', options)}`;
   };
@@ -179,26 +178,14 @@ function PlannerSection({ t, lang }) {
               type="text"
               value={locationInput}
               onChange={(e) => setLocationInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAnalyze(locationInput, soilInput)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAnalyze(locationInput)}
               placeholder={t.planner_input_ph || 'Enter city / district...'}
-              style={{ flex: '1 1 180px' }}
+              style={{ flex: '1 1 240px' }}
             />
-            <select
-              value={soilInput}
-              onChange={(e) => {
-                setSoilInput(e.target.value);
-                handleAnalyze(locationInput, e.target.value);
-              }}
-              style={{ padding: '0 12px', height: '44px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-main)', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', cursor: 'pointer' }}
-            >
-              <option value="Fertile loam">Loam Soil</option>
-              <option value="Black cotton soil">Black Cotton Soil</option>
-              <option value="Sandy loam">Sandy Soil</option>
-              <option value="Clay loam">Clay Soil</option>
-              <option value="Alluvial soil">Alluvial Soil</option>
-              <option value="Red soil">Red Soil</option>
-            </select>
-            <button onClick={() => handleAnalyze(locationInput, soilInput)} disabled={loading}>
+            <div style={{ display: 'flex', alignItems: 'center', padding: '0 14px', height: '44px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-main)', border: '1px solid rgba(255,255,255,0.15)', fontSize: '0.9rem', fontWeight: '500' }}>
+              🌱 Season: <b style={{ color: '#4ade80', marginLeft: '6px' }}>{plannerData?.season || 'Kharif'}</b>
+            </div>
+            <button onClick={() => handleAnalyze(locationInput)} disabled={loading}>
               {loading ? (t.planner_analyzing || 'Analyzing...') : (t.planner_btn || 'Analyze farm')}
             </button>
           </div>
@@ -216,7 +203,7 @@ function PlannerSection({ t, lang }) {
                 className="location-chip"
                 onClick={() => {
                   setLocationInput(item.loc);
-                  handleAnalyze(item.loc, soilInput);
+                  handleAnalyze(item.loc);
                 }}
               >
                 {item.label}
@@ -268,6 +255,9 @@ function PlannerSection({ t, lang }) {
             <div className="progress">
               <span style={{ width: `${selectedCrop.match_score}%` }} />
             </div>
+            <div style={{ fontSize: '0.8rem', opacity: 0.8, marginTop: '4px', textAlign: 'right' }}>
+              Sowing readiness: <b>{selectedCrop.match_score}%</b>
+            </div>
 
             <div className="planner-grid">
               <div>
@@ -290,19 +280,27 @@ function PlannerSection({ t, lang }) {
             <div className="recommend">
               <CheckCircle2 />
               <div>
-                <b>{t.planner_sowing || 'Recommended Sowing Window'}</b>
-                <p>{(selectedCrop.suggested_sowing_window === 'Favorable conditions! Sow within the next 3–5 days.' || plannerData?.sowing_advisory === 'Favorable conditions! Sow within the next 3–5 days.') ? (t.planner_sowing_adv || 'Favorable conditions! Sow within the next 3–5 days.') : (selectedCrop.suggested_sowing_window || plannerData?.sowing_advisory)}</p>
+                <b>{selectedCrop.sowing_window?.status || 'GOOD'} SOWING WINDOW ({selectedCrop.suggested_sowing_window})</b>
+                <p>{selectedCrop.sowing_window?.reason || selectedCrop.suggested_sowing_window || plannerData?.sowing_advisory}</p>
               </div>
             </div>
 
-            <div className="score-breakdown">
+            <div className="score-breakdown" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
               <div className="score-item">
-                <small>{t.planner_climate || 'Climate Fit'}</small>
-                <b>{selectedCrop.scores?.climate_suitability || 92}%</b>
+                <small>{t.planner_climate || 'Lifecycle Climate'}</small>
+                <b>{selectedCrop.scores?.lifecycle_climate ?? selectedCrop.scores?.climate_suitability ?? 90}%</b>
               </div>
               <div className="score-item">
                 <small>{t.planner_season || 'Season Alignment'}</small>
-                <b>{selectedCrop.scores?.season_suitability || 95}%</b>
+                <b>{selectedCrop.scores?.season ?? selectedCrop.scores?.season_suitability ?? 95}%</b>
+              </div>
+              <div className="score-item">
+                <small>Current Conditions</small>
+                <b>{selectedCrop.scores?.current_conditions ?? 88}%</b>
+              </div>
+              <div className="score-item">
+                <small>Short-Term Forecast</small>
+                <b>{selectedCrop.scores?.forecast ?? selectedCrop.scores?.forecast_suitability ?? 85}%</b>
               </div>
             </div>
           </>

@@ -3,21 +3,21 @@ from typing import List, Optional
 
 class RecommendationRequest(BaseModel):
     location: Optional[str] = "Vadodara, Gujarat"
-    soil_type: Optional[str] = "Fertile loam"
-    temperature: Optional[float] = None
-    rainfall: Optional[float] = None
-    ph: Optional[float] = 6.8
-    season: Optional[str] = None
-    land_area_acres: Optional[float] = 2.0
 
 class ScoreBreakdown(BaseModel):
-    climate_suitability: int
-    season_suitability: int
+    lifecycle_climate: int
+    season: int
     current_conditions: int
-    forecast_suitability: int
+    forecast: int
+
+class SowingWindowSchema(BaseModel):
+    status: str  # "GOOD", "CAUTION", "WAIT"
+    recommended_start: str  # e.g. "2026-08-25"
+    recommended_end: str    # e.g. "2026-08-29"
+    reason: str
 
 class RiskBreakdown(BaseModel):
-    level: str # LOW, MEDIUM, HIGH
+    level: str  # "LOW", "MEDIUM", "HIGH"
     score: int
     warnings: List[str]
 
@@ -29,26 +29,27 @@ class GrowthStageSchema(BaseModel):
 class CropRecommendationItem(BaseModel):
     crop_name: str
     category: str
-    match_score: int # 0 to 100%
-    suitability_rating: str # Highly Suitable, Suitable, Moderate
+    match_score: int
+    suitability_rating: str
     scores: ScoreBreakdown
     risk: RiskBreakdown
+    sowing_window: SowingWindowSchema
     duration_days: int
     growth_stages: List[GrowthStageSchema]
     reasons: List[str]
     risk_factors: List[str]
     expected_yield: str
     suggested_sowing_window: str
-    sowing_status: str # GOOD, WAIT, HEAT_RISK
+    sowing_status: str
 
 class RecommendationResponse(BaseModel):
     location: str
+    season: str  # e.g. "Kharif", "Rabi", "Zaid"
     temperature: float
     humidity: float
     rain_probability: float
     rainfall_expected: float
     condition: str
-    soil_type: str
     top_recommendations: List[CropRecommendationItem]
     sowing_advisory: str
     is_demo: bool = False

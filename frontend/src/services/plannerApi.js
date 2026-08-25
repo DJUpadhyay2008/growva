@@ -1,15 +1,13 @@
 const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (isLocal ? 'http://localhost:8000/api/v1' : 'https://growva-backend.onrender.com/api/v1');
 
-
-export async function fetchCropRecommendations(location, soilType = 'Fertile loam') {
+export async function fetchCropRecommendations(location = 'Vadodara, Gujarat') {
   try {
     const res = await fetch(`${API_BASE_URL}/recommendations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         location: location || 'Vadodara, Gujarat',
-        soil_type: soilType,
       }),
     });
 
@@ -55,15 +53,15 @@ export async function fetchWeather(location = 'Vadodara, Gujarat') {
       condition: 'Partly cloudy',
       wind_speed_kmh: 14.0,
       forecast: [
-        { day: 'Mon', temp: 28, condition: 'Partly cloudy', rain_prob: 60, icon: 'cloud-rain' },
-        { day: 'Tue', temp: 27, condition: 'Light rain', rain_prob: 75, icon: 'cloud-rain' },
-        { day: 'Wed', temp: 29, condition: 'Sunny', rain_prob: 20, icon: 'sun' },
-        { day: 'Thu', temp: 26, condition: 'Rain showers', rain_prob: 80, icon: 'cloud-rain' },
-        { day: 'Fri', temp: 30, condition: 'Clear sky', rain_prob: 10, icon: 'sun' },
-        { day: 'Sat', temp: 31, condition: 'Sunny', rain_prob: 15, icon: 'sun' },
-        { day: 'Sun', temp: 29, condition: 'Partly cloudy', rain_prob: 30, icon: 'sun' },
+        { day: 'Mon', temp: 28, condition: 'Partly cloudy', rain_prob: 60 },
+        { day: 'Tue', temp: 27, condition: 'Light rain', rain_prob: 75 },
+        { day: 'Wed', temp: 29, condition: 'Sunny', rain_prob: 20 },
+        { day: 'Thu', temp: 26, condition: 'Rain showers', rain_prob: 80 },
+        { day: 'Fri', temp: 30, condition: 'Clear sky', rain_prob: 10 },
+        { day: 'Sat', temp: 31, condition: 'Sunny', rain_prob: 15 },
+        { day: 'Sun', temp: 29, condition: 'Partly cloudy', rain_prob: 30 },
       ],
-      advisory: `Favorable sowing moisture detected for ${location}. Next rain window in 2 days.`
+      advisory: `Favorable sowing moisture detected for ${location}.`
     };
   }
 }
@@ -124,28 +122,6 @@ export async function fetchSchemes(category = '') {
         eligibility_criteria: "All farmers growing notified crops in notified areas.",
         required_documents: "Aadhaar Card, Land Sowing Certificate, Bank Passbook, Land Record",
         apply_url: "https://pmfby.gov.in/"
-      },
-      {
-        code: "PM-KUSUM",
-        title: "PM Kisan Urja Suraksha evam Utthaan Mahabhiyan",
-        category: "Solar irrigation",
-        short_description: "Subsidy up to 60% for installing standalone solar agriculture pumps and grid solarization.",
-        full_description: "Subsidized solar pump sets (3 HP to 10 HP) and extra income from surplus solar energy.",
-        benefit_amount: "60% Government Subsidy",
-        eligibility_criteria: "Individual farmers, water user associations, cooperatives.",
-        required_documents: "Aadhaar, Land Registry Document, Bank Details",
-        apply_url: "https://pmkusum.mnre.gov.in/"
-      },
-      {
-        code: "SOIL-HEALTH",
-        title: "Soil Health Card Scheme",
-        category: "Soil testing",
-        short_description: "Biennial soil testing to provide customized nutrient recommendations for optimal fertilizer use.",
-        full_description: "Free soil testing report card with customized fertilizer dose recommendations.",
-        benefit_amount: "Free Soil Nutrient Analysis",
-        eligibility_criteria: "All farmers across India possessing agricultural land holdings.",
-        required_documents: "Aadhaar Card, Field Location Coordinates",
-        apply_url: "https://soilhealth.dac.gov.in/"
       }
     ];
   }
@@ -165,7 +141,6 @@ export async function checkSchemeEligibility(schemeCode, landAcres = 3, isRegist
     if (!res.ok) throw new Error(`Server status ${res.status}`);
     return await res.json();
   } catch (error) {
-    console.warn('Backend Scheme Eligibility API fail, using fallback response:', error);
     return {
       scheme_code: schemeCode,
       is_eligible: true,
@@ -191,15 +166,14 @@ export async function diagnoseCropDisease(cropName, symptomsText, imageBase64 = 
     if (!res.ok) throw new Error(`Server status ${res.status}`);
     return await res.json();
   } catch (error) {
-    console.warn('Backend Disease API fail, using fallback diagnosis:', error);
     return {
       crop_name: cropName || 'Tomato',
       diagnosed_disease: `${cropName || 'Tomato'} Leaf Blight & Spot Infection`,
       confidence_score: imageBase64 ? 0.96 : 0.92,
-      symptoms_matched: imageBase64 ? ["visual leaf lesion detected", "chlorotic yellowing", "spot necrosis"] : ["yellowing", "concentric dark spots", "leaf chlorosis"],
+      symptoms_matched: ["yellowing", "concentric dark spots", "leaf chlorosis"],
       organic_treatment: "Spray Neem oil formulation (5 ml/L water) or Trichoderma viride bio-fungicide (5g/L).",
       chemical_treatment: "Apply Mancozeb 75 WP (2.5g/L water) or Copper Oxychloride 50 WP.",
-      preventive_measures: "Practice 3-year crop rotation, maintain plant spacing for airflow, and avoid overhead sprinkler watering."
+      preventive_measures: "Practice crop rotation, maintain plant spacing for airflow."
     };
   }
 }
@@ -219,16 +193,8 @@ export async function sendChatMessage(messages, provider = 'openrouter', apiKey 
     if (!res.ok) throw new Error(`Server status ${res.status}`);
     return await res.json();
   } catch (error) {
-    console.warn('Backend Chat API call failed, generating intelligent client fallback:', error);
     const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')?.content || '';
     let fallbackText = "🌾 **Namaste Farmer!** I am your Growva AI Kisan Assistant. How can I help you today with crop recommendations, mandi rates, disease identification, or weather forecasts?";
-    
-    if (lastUserMsg.toLowerCase().includes('mandi') || lastUserMsg.toLowerCase().includes('price')) {
-      fallbackText = "💰 **Mandi Rates Advisory**: Today's modal price for Wheat in Bavla Mandi is ₹2,600/quintal and Cotton in Sanand Mandi is ₹7,150/quintal. Check the Mandi tab on Growva for full details!";
-    } else if (lastUserMsg.toLowerCase().includes('disease') || lastUserMsg.toLowerCase().includes('leaf') || lastUserMsg.toLowerCase().includes('spot')) {
-      fallbackText = "🌿 **Leaf Health Advisory**: Upload your leaf image in the 'Disease Check' section for instant AI diagnosis. For fungal spots, spray Neem oil (5ml/L) or Copper Oxychloride 50 WP (2.5g/L).";
-    }
-
     return {
       reply: fallbackText,
       provider_used: `${provider} (Fallback)`,
@@ -243,143 +209,131 @@ function getFallbackRecommendationData(location = 'Vadodara, Gujarat') {
   
   let temp = 28.5;
   let humidity = 68.0;
-  let rainProb = 50.0;
-  let rainMm = 15.0;
+  let rainProb = 45.0;
+  let rainMm = 12.0;
+  let season = "Kharif";
   let topCrops = [];
 
   if (locLower.includes('amarnath') || locLower.includes('srinagar') || locLower.includes('shimla') || locLower.includes('leh') || locLower.includes('manali')) {
-    temp = 8.5;
-    humidity = 78.0;
+    temp = 7.5;
+    humidity = 76.0;
     rainProb = 40.0;
-    rainMm = 10.0;
+    rainMm = 5.0;
+    season = "Rabi";
     topCrops = [
       {
         crop_name: 'Apple',
         category: 'Fruits',
-        match_score: 94,
+        match_score: 93,
         suitability_rating: 'Highly Suitable',
-        scores: { climate_suitability: 95, season_suitability: 96, current_conditions: 92, forecast_suitability: 90 },
-        risk: { level: 'LOW', score: 90, warnings: ['Ideal temperate mountain climate.'] },
+        scores: { lifecycle_climate: 94, season: 95, current_conditions: 92, forecast: 90 },
+        risk: { level: 'LOW', score: 90, warnings: ['Optimal temperate mountain climate.'] },
+        sowing_window: { status: 'GOOD', recommended_start: '2026-08-25', recommended_end: '2026-08-29', reason: 'Favorable cold weather for orchard planting.' },
         duration_days: 365,
         growth_stages: [
           { name: 'Prepare field', start_day: 0, end_day: 30 },
           { name: 'Sowing window', start_day: 31, end_day: 60 },
-          { name: 'Vegetative growth', start_day: 61, end_day: 180 },
-          { name: 'Flowering & Fruit set', start_day: 181, end_day: 280 },
+          { name: 'Germination & Vegetative', start_day: 61, end_day: 180 },
+          { name: 'Flowering & Pods', start_day: 181, end_day: 280 },
           { name: 'Expected harvest', start_day: 281, end_day: 365 }
         ],
-        reasons: ['Cold chilling hours ideal for apple bud break', 'Elevation and temperature match temperate zone requirements'],
+        reasons: ['Cold chilling hours ideal for apple bud break', 'Historical climate matches temperate zone requirements'],
         risk_factors: ['Monitor for late spring frost'],
         expected_yield: '12 - 22 tonnes/ha',
-        suggested_sowing_window: 'Sow or plant saplings during dormant winter/early spring window',
+        suggested_sowing_window: 'Aug 25 – Aug 29',
         sowing_status: 'GOOD'
       },
       {
         crop_name: 'Barley',
         category: 'Crops',
-        match_score: 89,
+        match_score: 88,
         suitability_rating: 'Highly Suitable',
-        scores: { climate_suitability: 90, season_suitability: 92, current_conditions: 88, forecast_suitability: 85 },
-        risk: { level: 'LOW', score: 85, warnings: ['Cold tolerant crop.'] },
+        scores: { lifecycle_climate: 90, season: 92, current_conditions: 86, forecast: 82 },
+        risk: { level: 'LOW', score: 85, warnings: ['Cold tolerant cereal.'] },
+        sowing_window: { status: 'GOOD', recommended_start: '2026-08-25', recommended_end: '2026-08-29', reason: 'Cold tolerant window.' },
         duration_days: 110,
         growth_stages: [
           { name: 'Prepare field', start_day: 0, end_day: 10 },
           { name: 'Sowing window', start_day: 11, end_day: 25 },
-          { name: 'Tillering', start_day: 26, end_day: 55 },
-          { name: 'Heading', start_day: 56, end_day: 85 },
+          { name: 'Germination & Vegetative', start_day: 26, end_day: 55 },
+          { name: 'Flowering & Pods', start_day: 56, end_day: 85 },
           { name: 'Expected harvest', start_day: 86, end_day: 110 }
         ],
-        reasons: ['High cold tolerance (8°C - 28°C)', 'Thrives in temperate soils'],
+        reasons: ['High cold tolerance', 'Thrives in temperate loams'],
         risk_factors: ['Avoid waterlogging during thaw'],
         expected_yield: '3.0 - 4.0 tonnes/ha',
-        suggested_sowing_window: 'Sow within next 5 days',
-        sowing_status: 'GOOD'
-      },
-      {
-        crop_name: 'Potato',
-        category: 'Vegetables',
-        match_score: 84,
-        suitability_rating: 'Highly Suitable',
-        scores: { climate_suitability: 86, season_suitability: 88, current_conditions: 82, forecast_suitability: 80 },
-        risk: { level: 'LOW', score: 82, warnings: ['Optimal tuber development range.'] },
-        duration_days: 100,
-        growth_stages: [
-          { name: 'Prepare field', start_day: 0, end_day: 10 },
-          { name: 'Sowing window', start_day: 11, end_day: 25 },
-          { name: 'Vegetative growth', start_day: 26, end_day: 55 },
-          { name: 'Tuber bulking', start_day: 56, end_day: 80 },
-          { name: 'Expected harvest', start_day: 81, end_day: 100 }
-        ],
-        reasons: ['Cool weather promotes high tuber yield', 'Loose friable soil match'],
-        risk_factors: ['Watch for late blight in high moisture'],
-        expected_yield: '20 - 35 tonnes/ha',
-        suggested_sowing_window: 'Sow tuber sets in loose soil',
+        suggested_sowing_window: 'Aug 25 – Aug 29',
         sowing_status: 'GOOD'
       }
     ];
-  } else if (locLower.includes('jaipur') || locLower.includes('jaisalmer') || locLower.includes('jodhpur') || locLower.includes('rajkot')) {
-    temp = 33.0;
-    humidity = 42.0;
+  } else if (locLower.includes('jaisalmer') || locLower.includes('jodhpur') || locLower.includes('bikaner')) {
+    temp = 34.0;
+    humidity = 38.0;
     rainProb = 20.0;
-    rainMm = 2.0;
+    rainMm = 1.0;
+    season = "Kharif";
     topCrops = [
       {
         crop_name: 'Bajra',
         category: 'Crops',
         match_score: 93,
         suitability_rating: 'Highly Suitable',
-        scores: { climate_suitability: 95, season_suitability: 94, current_conditions: 92, forecast_suitability: 90 },
+        scores: { lifecycle_climate: 95, season: 94, current_conditions: 92, forecast: 90 },
         risk: { level: 'LOW', score: 90, warnings: ['Highly drought resilient.'] },
+        sowing_window: { status: 'GOOD', recommended_start: '2026-08-25', recommended_end: '2026-08-29', reason: 'Drought resilient sowing window.' },
         duration_days: 85,
         growth_stages: [
           { name: 'Prepare field', start_day: 0, end_day: 8 },
           { name: 'Sowing window', start_day: 9, end_day: 20 },
-          { name: 'Vegetative', start_day: 21, end_day: 45 },
-          { name: 'Grain filling', start_day: 46, end_day: 70 },
+          { name: 'Germination & Vegetative', start_day: 21, end_day: 45 },
+          { name: 'Flowering & Pods', start_day: 46, end_day: 70 },
           { name: 'Expected harvest', start_day: 71, end_day: 85 }
         ],
-        reasons: ['Extreme heat and drought tolerance (up to 42°C)', 'Thrives in low rainfall & sandy soils'],
-        risk_factors: ['Minimal moisture requirement satisfied'],
+        reasons: ['Extreme heat and drought tolerance', 'Low water requirement satisfied'],
+        risk_factors: ['No major weather risks detected'],
         expected_yield: '2.0 - 3.0 tonnes/ha',
-        suggested_sowing_window: 'Sow immediately for optimal moisture capture',
+        suggested_sowing_window: 'Aug 25 – Aug 29',
         sowing_status: 'GOOD'
       },
       {
         crop_name: 'Cumin',
         category: 'Spices',
-        match_score: 88,
+        match_score: 87,
         suitability_rating: 'Highly Suitable',
-        scores: { climate_suitability: 90, season_suitability: 90, current_conditions: 86, forecast_suitability: 85 },
+        scores: { lifecycle_climate: 88, season: 90, current_conditions: 85, forecast: 84 },
         risk: { level: 'LOW', score: 85, warnings: ['Dry climate ideal for seed quality.'] },
+        sowing_window: { status: 'GOOD', recommended_start: '2026-08-25', recommended_end: '2026-08-29', reason: 'Dry climate sowing window.' },
         duration_days: 110,
         growth_stages: [
           { name: 'Prepare field', start_day: 0, end_day: 10 },
           { name: 'Sowing window', start_day: 11, end_day: 25 },
-          { name: 'Vegetative growth', start_day: 26, end_day: 60 },
-          { name: 'Flowering & Seed set', start_day: 61, end_day: 90 },
+          { name: 'Germination & Vegetative', start_day: 26, end_day: 60 },
+          { name: 'Flowering & Pods', start_day: 61, end_day: 90 },
           { name: 'Expected harvest', start_day: 91, end_day: 110 }
         ],
-        reasons: ['Low moisture and well-drained soil preference', 'High market commodity value'],
-        risk_factors: ['Avoid over-watering'],
+        reasons: ['Low moisture requirement', 'High market commodity value'],
+        risk_factors: ['Avoid over-irrigation'],
         expected_yield: '0.6 - 1.0 tonnes/ha',
-        suggested_sowing_window: 'Sow in well-drained field bed',
+        suggested_sowing_window: 'Aug 25 – Aug 29',
         sowing_status: 'GOOD'
       }
     ];
   } else {
-    // Default (Vadodara, Punjab, Maharashtra, etc.)
-    temp = 29.5;
-    humidity = 74.0;
-    rainProb = 64.0;
-    rainMm = 62.0;
+    // Default (Vadodara, Gujarat, etc.)
+    temp = 28.5;
+    humidity = 68.0;
+    rainProb = 45.0;
+    rainMm = 12.0;
+    season = "Kharif";
     topCrops = [
       {
         crop_name: 'Groundnut',
         category: 'Pulses & Oilseeds',
-        match_score: 92,
+        match_score: 91,
         suitability_rating: 'Highly Suitable',
-        scores: { climate_suitability: 94, season_suitability: 95, current_conditions: 90, forecast_suitability: 88 },
-        risk: { level: 'LOW', score: 88, warnings: ['Favorable moisture window.'] },
+        scores: { lifecycle_climate: 93, season: 95, current_conditions: 88, forecast: 85 },
+        risk: { level: 'LOW', score: 88, warnings: ['Optimal short-term weather window.'] },
+        sowing_window: { status: 'GOOD', recommended_start: '2026-08-25', recommended_end: '2026-08-29', reason: 'Suitable short-term weather conditions.' },
         duration_days: 120,
         growth_stages: [
           { name: 'Prepare field', start_day: 0, end_day: 10 },
@@ -388,52 +342,54 @@ function getFallbackRecommendationData(location = 'Vadodara, Gujarat') {
           { name: 'Flowering & Pods', start_day: 61, end_day: 90 },
           { name: 'Expected harvest', start_day: 91, end_day: 120 }
         ],
-        reasons: ['Temperature (29.5°C) is within ideal 20-35°C growth window', 'Moisture and soil suitability are high'],
-        risk_factors: ['No major weather risks detected'],
+        reasons: ['Seasonal climate is favorable for Groundnut', 'Current temperature (28.5°C) is within optimal growth range', 'Historical rainfall is suitable over 120-day lifecycle', 'Short-term weather risk is low'],
+        risk_factors: ['No major short-term weather risks detected'],
         expected_yield: '1.8 - 2.5 tonnes/ha',
-        suggested_sowing_window: 'Sow within the next 3–5 days',
+        suggested_sowing_window: 'Aug 25 – Aug 29',
         sowing_status: 'GOOD'
       },
       {
         crop_name: 'Cotton',
         category: 'Crops',
-        match_score: 87,
+        match_score: 86,
         suitability_rating: 'Highly Suitable',
-        scores: { climate_suitability: 88, season_suitability: 90, current_conditions: 86, forecast_suitability: 84 },
-        risk: { level: 'LOW', score: 84, warnings: ['Good soil warmness for boll setup.'] },
+        scores: { lifecycle_climate: 88, season: 90, current_conditions: 85, forecast: 80 },
+        risk: { level: 'LOW', score: 84, warnings: ['Suitable temperature for boll setup.'] },
+        sowing_window: { status: 'GOOD', recommended_start: '2026-08-25', recommended_end: '2026-08-29', reason: 'Favorable field conditions.' },
         duration_days: 160,
         growth_stages: [
           { name: 'Prepare field', start_day: 0, end_day: 14 },
           { name: 'Sowing window', start_day: 15, end_day: 35 },
-          { name: 'Vegetative growth', start_day: 36, end_day: 80 },
-          { name: 'Boll formation', start_day: 81, end_day: 120 },
+          { name: 'Germination & Vegetative', start_day: 36, end_day: 80 },
+          { name: 'Flowering & Pods', start_day: 81, end_day: 120 },
           { name: 'Expected harvest', start_day: 121, end_day: 160 }
         ],
         reasons: ['Black loamy soil suitability', 'Warm climate accelerates boll development'],
         risk_factors: ['Requires well-drained soil during germination'],
         expected_yield: '2.0 - 3.0 tonnes/ha',
-        suggested_sowing_window: 'Sow after field preparation',
+        suggested_sowing_window: 'Aug 25 – Aug 29',
         sowing_status: 'GOOD'
       },
       {
         crop_name: 'Maize',
         category: 'Crops',
-        match_score: 81,
+        match_score: 79,
         suitability_rating: 'Suitable',
-        scores: { climate_suitability: 82, season_suitability: 84, current_conditions: 80, forecast_suitability: 78 },
+        scores: { lifecycle_climate: 80, season: 82, current_conditions: 78, forecast: 74 },
         risk: { level: 'LOW', score: 80, warnings: ['Adequate rainfall expected.'] },
+        sowing_window: { status: 'GOOD', recommended_start: '2026-08-25', recommended_end: '2026-08-29', reason: 'Clear sowing window.' },
         duration_days: 100,
         growth_stages: [
           { name: 'Prepare field', start_day: 0, end_day: 8 },
           { name: 'Sowing window', start_day: 9, end_day: 20 },
-          { name: 'Tasseling', start_day: 21, end_day: 55 },
-          { name: 'Cob filling', start_day: 56, end_day: 80 },
+          { name: 'Germination & Vegetative', start_day: 21, end_day: 55 },
+          { name: 'Flowering & Pods', start_day: 56, end_day: 80 },
           { name: 'Expected harvest', start_day: 81, end_day: 100 }
         ],
         reasons: ['Moderate water requirement matches forecast', 'Adaptable to local loamy soil'],
         risk_factors: ['Avoid waterlogging during germination'],
         expected_yield: '3.5 - 5.0 tonnes/ha',
-        suggested_sowing_window: 'Sow during clear rain window',
+        suggested_sowing_window: 'Aug 25 – Aug 29',
         sowing_status: 'GOOD'
       }
     ];
@@ -441,15 +397,14 @@ function getFallbackRecommendationData(location = 'Vadodara, Gujarat') {
 
   return {
     location: locName,
+    season: season,
     temperature: temp,
     humidity: humidity,
     rain_probability: rainProb,
     rainfall_expected: rainMm,
     condition: 'Partly cloudy',
-    soil_type: 'Fertile loam',
     top_recommendations: topCrops,
-    sowing_advisory: `Conditions in ${locName} (${temp}°C, ${humidity}% humidity) favor ${topCrops[0]?.crop_name} with top suitability (${topCrops[0]?.match_score}%).`,
+    sowing_advisory: `Conditions in ${locName} (${temp}°C, ${humidity}% humidity) favor sowing ${topCrops[0]?.crop_name} with top suitability (${topCrops[0]?.match_score}%).`,
     is_demo: true
   };
 }
-
