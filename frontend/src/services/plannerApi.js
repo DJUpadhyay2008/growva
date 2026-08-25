@@ -81,13 +81,91 @@ export async function fetchMandiPrices(commodity = '', state = '', market = '') 
     return {
       total: 6,
       items: [
-        { state: "Gujarat", district: "Ahmedabad", market: "Bavla Mandi", commodity: "Wheat", variety: "Lokwan", min_price: 2400, max_price: 2750, modal_price: 2600, arrival_date: "2026-08-24" },
-        { state: "Gujarat", district: "Ahmedabad", market: "Sanand Mandi", commodity: "Cotton", variety: "Shankar-6", min_price: 6800, max_price: 7400, modal_price: 7150, arrival_date: "2026-08-24" },
-        { state: "Gujarat", district: "Rajkot", market: "Rajkot APMC", commodity: "Groundnut", variety: "Bold", min_price: 5800, max_price: 6500, modal_price: 6200, arrival_date: "2026-08-24" },
-        { state: "Gujarat", district: "Mehsana", market: "Unjha APMC", commodity: "Cumin", variety: "Super Fine", min_price: 21000, max_price: 24500, modal_price: 23000, arrival_date: "2026-08-24" },
-        { state: "Punjab", district: "Ludhiana", market: "Ludhiana APMC", commodity: "Paddy", variety: "Basmati 1121", min_price: 3800, max_price: 4400, modal_price: 4150, arrival_date: "2026-08-24" },
-        { state: "Maharashtra", district: "Nashik", market: "Lasalgaon Mandi", commodity: "Onion", variety: "Red Onion", min_price: 1400, max_price: 2100, modal_price: 1850, arrival_date: "2026-08-24" }
+        { state: "Gujarat", district: "Ahmedabad", market: "Bavla Mandi", commodity: "Wheat", variety: "Lokwan", min_price: 2450, max_price: 2850, modal_price: 2680, arrival_date: "2026-08-25" },
+        { state: "Gujarat", district: "Ahmedabad", market: "Sanand Mandi", commodity: "Cotton", variety: "Shankar-6", min_price: 6800, max_price: 7600, modal_price: 7250, arrival_date: "2026-08-25" },
+        { state: "Gujarat", district: "Rajkot", market: "Gondal APMC", commodity: "Groundnut", variety: "Bold", min_price: 6400, max_price: 7150, modal_price: 6800, arrival_date: "2026-08-25" },
+        { state: "Gujarat", district: "Rajkot", market: "Rajkot APMC", commodity: "Groundnut", variety: "Bold", min_price: 6350, max_price: 7000, modal_price: 6750, arrival_date: "2026-08-25" },
+        { state: "Gujarat", district: "Mehsana", market: "Unjha APMC", commodity: "Cumin", variety: "Super Fine", min_price: 22500, max_price: 26500, modal_price: 24800, arrival_date: "2026-08-25" },
+        { state: "Maharashtra", district: "Nashik", market: "Lasalgaon Mandi", commodity: "Onion", variety: "Red Onion", min_price: 1600, max_price: 2480, modal_price: 2150, arrival_date: "2026-08-25" }
       ]
+    };
+  }
+}
+
+export async function fetchMarketAnalysis(locationName = 'Vadodara, Gujarat', crop = 'Groundnut', quantityQuintals = 10, radiusKm = 250) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/markets/market-analysis`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: { name: locationName },
+        crop: crop,
+        quantity_quintals: Number(quantityQuintals) || 10,
+        radius_km: Number(radiusKm) || 250
+      })
+    });
+    if (!res.ok) throw new Error(`Server status ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.warn('Backend Market Analysis API call failed, calculating local fallback analysis:', error);
+    // Fallback mathematical calculation engine
+    const qty = Number(quantityQuintals) || 10;
+    const baseMarkets = [
+      { market: "Gondal APMC", district: "Rajkot", state: "Gujarat", modal: 6800, dist: 235, variety: "Bold" },
+      { market: "Rajkot APMC", district: "Rajkot", state: "Gujarat", modal: 6750, dist: 220, variety: "Bold / Java" },
+      { market: "Anand APMC", district: "Anand", state: "Gujarat", modal: 6250, dist: 45, variety: "Local" },
+      { market: "Vadodara APMC", district: "Vadodara", state: "Gujarat", modal: 6100, dist: 20, variety: "Medium" },
+      { market: "Ahmedabad APMC", district: "Ahmedabad", state: "Gujarat", modal: 6300, dist: 110, variety: "Bold" }
+    ];
+
+    const evaluated = baseMarkets.map(m => {
+      const trans = Math.max(250, (m.dist * 12) + (m.dist * qty * 1.5));
+      const gross = m.modal * qty;
+      const net = gross - trans;
+      return {
+        market: m.market,
+        district: m.district,
+        state: m.state,
+        commodity: crop,
+        variety: m.variety,
+        modal_price: m.modal,
+        min_price: Math.round(m.modal * 0.94),
+        max_price: Math.round(m.modal * 1.06),
+        unit: "quintal",
+        distance_km: m.dist,
+        transport_cost: Math.round(trans),
+        transport_cost_per_quintal: Math.round(trans / qty),
+        gross_revenue: Math.round(gross),
+        net_realization: Math.round(net),
+        net_realization_per_quintal: Math.round(net / qty),
+        price_date: "2026-08-25",
+        freshness_status: "Fresh",
+        data_source: "AGMARKNET Benchmark",
+        latitude: 22.3,
+        longitude: 70.8
+      };
+    });
+
+    evaluated.sort((a, b) => b.net_realization - a.net_realization);
+    evaluated.forEach((item, index) => item.rank = index + 1);
+
+    const best = evaluated[0];
+    const local = evaluated.find(x => x.market.includes("Vadodara")) || evaluated[evaluated.length - 1];
+    const addl = Math.max(0, best.net_realization - local.net_realization);
+
+    return {
+      crop,
+      farmer_location: locationName,
+      farmer_latitude: 22.3072,
+      farmer_longitude: 73.1812,
+      quantity_quintals: qty,
+      radius_km: radiusKm,
+      best_market: best,
+      markets: evaluated,
+      potential_additional_realization: addl,
+      baseline_market_name: local.market,
+      analysis_summary: `${best.market} is the optimal choice offering a higher modal price of ₹${best.modal_price.toLocaleString()}/quintal. Despite being ${best.distance_km} km away, the price premium yields an estimated net realization of ₹${best.net_realization.toLocaleString()} (+₹${addl.toLocaleString()} net gain vs local APMC).`,
+      is_demo_data: true
     };
   }
 }

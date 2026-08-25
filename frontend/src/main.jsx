@@ -196,7 +196,7 @@ function CropCard({ item, t, lang, onSelect }) {
   );
 }
 
-function PlannerSection({ t, lang }) {
+function PlannerSection({ t, lang, onSelectMarketCrop }) {
   const [locationInput, setLocationInput] = useState('Vadodara, Gujarat');
   const [loading, setLoading] = useState(false);
   const [plannerData, setPlannerData] = useState(null);
@@ -380,6 +380,13 @@ function PlannerSection({ t, lang }) {
                 <b>{selectedCrop.scores?.forecast ?? selectedCrop.scores?.forecast_suitability ?? 85}%</b>
               </div>
             </div>
+
+            <button
+              className="find-best-market-btn"
+              onClick={() => onSelectMarketCrop && onSelectMarketCrop(selectedCrop.crop_name, locationInput)}
+            >
+              <TrendingUp size={16} /> Find Best APMC Market to Sell {translateCrop(selectedCrop.crop_name, lang)}
+            </button>
           </>
         ) : (
           <div style={{ padding: '30px 0', textAlign: 'center', opacity: 0.8 }}>
@@ -476,27 +483,43 @@ function WeatherSection({ t, lang }) {
   );
 }
 
-function MandiSection({ t, lang }) {
-  const [commodity, setCommodity] = useState('');
-  const [stateFilter, setStateFilter] = useState('');
-  const [mandiItems, setMandiItems] = useState([]);
+function MandiSection({ t, lang, initialCrop = 'Groundnut', initialLocation = 'Vadodara, Gujarat' }) {
+  const [farmerLocation, setFarmerLocation] = useState(initialLocation);
+  const [crop, setCrop] = useState(initialCrop);
+  const [quantityQuintals, setQuantityQuintals] = useState(10);
+  const [radiusKm, setRadiusKm] = useState(250);
+
   const [loading, setLoading] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
 
   useEffect(() => {
-    loadMandi();
-  }, []);
+    if (initialCrop) setCrop(initialCrop);
+    if (initialLocation) setFarmerLocation(initialLocation);
+  }, [initialCrop, initialLocation]);
 
-  const loadMandi = async () => {
+  useEffect(() => {
+    runAnalysis();
+  }, [crop]);
+
+  const runAnalysis = async () => {
     setLoading(true);
     try {
-      const res = await fetchMandiPrices(commodity, stateFilter);
-      setMandiItems(res.items || []);
+      const res = await fetchMarketAnalysis(farmerLocation, crop, quantityQuintals, radiusKm);
+      setAnalysis(res);
     } catch (err) {
-      console.error(err);
+      console.error('Market analysis execution error:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  const cropOptions = [
+    'Groundnut', 'Wheat', 'Cotton', 'Rice', 'Cumin', 'Onion', 'Maize',
+    'Soybean', 'Chickpea', 'Pigeon Pea', 'Mustard', 'Sugarcane', 'Potato', 'Tomato'
+  ];
+
+  const bestMarket = analysis?.best_market;
+  const markets = analysis?.markets || [];
 
   return (
     <section className="section-wrapper alt-bg" id="mandi-rates">
@@ -504,47 +527,185 @@ function MandiSection({ t, lang }) {
         <div>
           <span className="section-kicker">{t.mandi_kicker || 'APMC MANDI PRICE COMPARISON'}</span>
           <h2>{t.mandi_title || 'Live Market Price Intelligence'}</h2>
-          <p>{t.mandi_sub || 'Compare real-time market prices across Indian agricultural mandis to maximize farm profitability.'}</p>
+          <p>{t.mandi_sub || 'Calculates real-world APMC prices minus Haversine transport costs to help farmers maximize net realization.'}</p>
         </div>
       </div>
 
+      {/* Control Inputs Bar */}
       <div className="mandi-filter-bar">
-        <input
-          type="text"
-          placeholder={t.mandi_input_ph || 'Filter by commodity (e.g. Wheat, Cotton, Groundnut, Cumin, Onion)...'}
-          value={commodity}
-          onChange={(e) => setCommodity(e.target.value)}
-        />
-        <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)}>
-          <option value="">{t.mandi_all_states || 'All States'}</option>
-          <option value="Gujarat">Gujarat</option>
-          <option value="Punjab">Punjab</option>
-          <option value="Maharashtra">Maharashtra</option>
-        </select>
-        <button onClick={loadMandi} disabled={loading}>
-          <Search size={15} /> {loading ? (t.mandi_fetching || 'Fetching...') : (t.mandi_btn || 'Filter Mandi')}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <small style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700' }}>Farm Location</small>
+          <input
+            type="text"
+            placeholder="e.g. Vadodara, Gujarat"
+            value={farmerLocation}
+            onChange={(e) => setFarmerLocation(e.target.value)}
+            style={{ width: '210px' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <small style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700' }}>Select Crop</small>
+          <select value={crop} onChange={(e) => setCrop(e.target.value)}>
+            {cropOptions.map(c => (
+              <option key={c} value={c}>{translateCrop(c, lang)} ({c})</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <small style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700' }}>Quantity (Quintals)</small>
+          <input
+            type="number"
+            min="1"
+            max="1000"
+            value={quantityQuintals}
+            onChange={(e) => setQuantityQuintals(e.target.value)}
+            style={{ width: '130px' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <small style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700' }}>Search Radius</small>
+          <select value={radiusKm} onChange={(e) => setRadiusKm(Number(e.target.value))} style={{ width: '130px' }}>
+            <option value={100}>100 km</option>
+            <option value={150}>150 km</option>
+            <option value={250}>250 km</option>
+            <option value={500}>500 km</option>
+          </select>
+        </div>
+
+        <button onClick={runAnalysis} disabled={loading} style={{ marginTop: '18px' }}>
+          <TrendingUp size={15} /> {loading ? (t.mandi_fetching || 'Calculating...') : 'Compare Markets'}
         </button>
       </div>
 
+      {/* Hero Card: BEST ESTIMATED NET REALIZATION */}
+      {bestMarket && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mandi-hero-banner">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            <span className="mandi-hero-tag">
+              🏆 RANK 1 APMC: HIGHEST ESTIMATED NET REALIZATION
+            </span>
+            {analysis.potential_additional_realization > 0 && (
+              <span className="net-profit-badge">
+                +₹{analysis.potential_additional_realization.toLocaleString()} Net Gain vs Local APMC
+              </span>
+            )}
+          </div>
+
+          <h3 className="mandi-hero-title">
+            {bestMarket.market} <small style={{ fontSize: '18px', fontWeight: '400', opacity: 0.8 }}>({bestMarket.district}, {bestMarket.state})</small>
+          </h3>
+          <div className="mandi-hero-subtitle">
+            <MapPin size={14} /> {bestMarket.distance_km} km distance from {analysis.farmer_location} &bull; Commodity: <b>{translateCrop(bestMarket.commodity, lang)} ({bestMarket.variety})</b>
+          </div>
+
+          <div className="mandi-hero-grid">
+            <div className="mandi-metric-card">
+              <small>Modal APMC Price</small>
+              <strong>₹{bestMarket.modal_price.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '400' }}>/ quintal</span></strong>
+            </div>
+            <div className="mandi-metric-card">
+              <small>Distance & Transport</small>
+              <strong>{bestMarket.distance_km} km <span style={{ fontSize: '11px', fontWeight: '400' }}>(₹{bestMarket.transport_cost.toLocaleString()} total)</span></strong>
+            </div>
+            <div className="mandi-metric-card">
+              <small>Gross Market Value</small>
+              <strong>₹{bestMarket.gross_revenue.toLocaleString()}</strong>
+            </div>
+            <div className="mandi-metric-card highlight">
+              <small>Est. Net Realization</small>
+              <strong>₹{bestMarket.net_realization.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '400' }}>(₹{bestMarket.net_realization_per_quintal.toLocaleString()}/q)</span></strong>
+            </div>
+          </div>
+
+          <div className="mandi-hero-narrative">
+            <b style={{ color: '#80e66c' }}>💡 Intelligence Insight: </b>
+            {analysis.analysis_summary}
+          </div>
+
+          <div style={{ marginTop: '14px', display: 'flex', gap: '16px', fontSize: '11px', color: '#b4d8b9' }}>
+            <span>📅 Arrival Date: <b>{bestMarket.price_date}</b></span>
+            <span>🟢 Freshness: <b>{bestMarket.freshness_status}</b></span>
+            <span>🏛️ Source: <b>{bestMarket.data_source}</b></span>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Comparative Market Table */}
+      {markets.length > 0 && (
+        <div className="mandi-table-wrapper">
+          <table className="mandi-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>APMC Mandi</th>
+                <th>Distance</th>
+                <th>Modal Price</th>
+                <th>Gross Revenue ({analysis?.quantity_quintals}q)</th>
+                <th>Est. Transport Cost</th>
+                <th>Est. Net Realization</th>
+                <th>Net Return / Q</th>
+              </tr>
+            </thead>
+            <tbody>
+              {markets.map((m) => (
+                <tr key={m.market} className={m.rank === 1 ? 'rank-1' : ''}>
+                  <td>
+                    {m.rank === 1 ? <span style={{ background: '#2e7d32', color: 'white', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>#1 BEST</span> : `#${m.rank}`}
+                  </td>
+                  <td>
+                    <b>{m.market}</b> <small style={{ color: 'var(--muted)' }}>({m.district})</small>
+                  </td>
+                  <td>{m.distance_km} km</td>
+                  <td>₹{m.modal_price.toLocaleString()}</td>
+                  <td>₹{m.gross_revenue.toLocaleString()}</td>
+                  <td style={{ color: '#c62828' }}>-₹{m.transport_cost.toLocaleString()}</td>
+                  <td>
+                    <b style={{ color: m.rank === 1 ? '#1b5e20' : 'var(--ink)' }}>₹{m.net_realization.toLocaleString()}</b>
+                  </td>
+                  <td>
+                    <b>₹{m.net_realization_per_quintal.toLocaleString()}</b>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Mandi Cards Grid */}
       <div className="mandi-grid">
-        {mandiItems.map((item, idx) => (
+        {markets.map((item, idx) => (
           <motion.div className="mandi-card" whileHover={{ y: -4 }} key={idx}>
             <div className="mandi-card-header">
               <h4>{translateCrop(item.commodity, lang)} <small style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 12 }}>({item.variety})</small></h4>
-              <span>{t.mandi_apmc_tag || 'APMC RATE'}</span>
+              <span style={{ background: item.rank === 1 ? 'var(--green)' : 'var(--mint)', color: item.rank === 1 ? 'white' : 'var(--green)' }}>
+                {item.rank === 1 ? 'RANK #1 BEST' : `RANK #${item.rank}`}
+              </span>
             </div>
+
             <div className="mandi-location">
-              <MapPin size={13} /> {item.market}, {item.district}, {item.state}
+              <MapPin size={13} /> {item.market}, {item.district}, {item.state} ({item.distance_km} km)
             </div>
-            <div className="mandi-price-box">
-              <div>
-                <small style={{ display: 'block', fontSize: 10, color: 'var(--muted)' }}>{t.mandi_modal_price || 'Modal Price'}</small>
-                <div className="mandi-modal-price">₹{item.modal_price.toLocaleString()} <small>{t.mandi_per_quintal || '/ quintal'}</small></div>
+
+            <div className="mandi-price-box" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <small style={{ display: 'block', fontSize: 10, color: 'var(--muted)' }}>Modal Price</small>
+                  <div className="mandi-modal-price">₹{item.modal_price.toLocaleString()} <small>{t.mandi_per_quintal || '/ q'}</small></div>
+                </div>
+                <div className="mandi-range">
+                  <div>Min: ₹{item.min_price}</div>
+                  <div>Max: ₹{item.max_price}</div>
+                  <div style={{ color: 'var(--green)', fontWeight: 700, marginTop: 2 }}>{item.price_date}</div>
+                </div>
               </div>
-              <div className="mandi-range">
-                <div>{t.mandi_min || 'Min:'} ₹{item.min_price}</div>
-                <div>{t.mandi_max || 'Max:'} ₹{item.max_price}</div>
-                <div style={{ color: 'var(--green)', fontWeight: 700, marginTop: 4 }}>{t.mandi_date || 'Date:'} {item.arrival_date}</div>
+
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+                <span>Logistics Cost: <b style={{ color: '#c62828' }}>₹{item.transport_cost.toLocaleString()}</b></span>
+                <span>Net Return: <b style={{ color: 'var(--green)' }}>₹{item.net_realization.toLocaleString()}</b></span>
               </div>
             </div>
           </motion.div>
@@ -1362,6 +1523,15 @@ function App() {
   const [selectedSchemeModal, setSelectedSchemeModal] = useState(null);
   const [showChat, setShowChat] = useState(false);
 
+  const [marketCrop, setMarketCrop] = useState('Groundnut');
+  const [marketLocation, setMarketLocation] = useState('Vadodara, Gujarat');
+
+  const handleSelectMarketCrop = (cropName, loc) => {
+    if (cropName) setMarketCrop(cropName);
+    if (loc) setMarketLocation(loc);
+    document.getElementById('mandi-rates')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const t = useMemo(() => getTranslation(lang), [lang]);
 
   const filtered = useMemo(() =>
@@ -1479,7 +1649,7 @@ function App() {
       </section>
 
       {/* Dynamic Sowing Planner */}
-      <PlannerSection t={t} lang={lang} />
+      <PlannerSection t={t} lang={lang} onSelectMarketCrop={handleSelectMarketCrop} />
 
       {/* Open-Meteo Weather Intelligence */}
       <WeatherSection t={t} lang={lang} />
@@ -1543,7 +1713,7 @@ function App() {
       </section>
 
       {/* APMC Mandi Market Prices */}
-      <MandiSection t={t} lang={lang} />
+      <MandiSection t={t} lang={lang} initialCrop={marketCrop} initialLocation={marketLocation} />
 
       {/* AI Crop Disease Diagnosis */}
       <DiseaseSection t={t} lang={lang} />
