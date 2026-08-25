@@ -1,17 +1,29 @@
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
-from app.database.database import get_db
-from app.schemas.scheme import SchemeResponse, SchemeEligibilityCheckRequest, SchemeEligibilityCheckResponse
+from fastapi import APIRouter, Query, HTTPException, Body
+from typing import List, Optional, Dict, Any
 from app.services import scheme_service
-from typing import List, Optional
 
 router = APIRouter(prefix="/schemes", tags=["Government Schemes"])
 
-@router.get("", response_model=List[SchemeResponse])
-def get_schemes(category: Optional[str] = Query(None), db: Session = Depends(get_db)):
-    schemes = scheme_service.get_all_schemes(db, category=category)
-    return [SchemeResponse.from_orm(s) for s in schemes]
+@router.get("")
+def get_schemes(category: Optional[str] = Query(None), state: Optional[str] = Query(None)):
+    """Retrieve all verified government schemes with category and state filters."""
+    return scheme_service.get_all_schemes(category=category, state=state)
 
-@router.post("/eligibility", response_model=SchemeEligibilityCheckResponse)
-def check_eligibility(req: SchemeEligibilityCheckRequest, db: Session = Depends(get_db)):
-    return scheme_service.check_scheme_eligibility(db, req)
+@router.get("/{scheme_id}")
+def get_scheme_detail(scheme_id: str):
+    """Retrieve a single detailed government scheme object."""
+    scheme = scheme_service.get_scheme_by_id(scheme_id)
+    if not scheme:
+        raise HTTPException(status_code=404, detail="Scheme not found")
+    return scheme
+
+@router.post("/{scheme_id}/eligibility")
+def check_scheme_eligibility(scheme_id: str, payload: Dict[str, Any] = Body(...)):
+    """Evaluate farmer answers against scheme-specific deterministic rules."""
+    answers = payload.get("answers", payload)
+    return scheme_service.check_single_scheme_eligibility(scheme_id, answers)
+
+@router.post("/match")
+def match_schemes_for_profile(profile: Dict[str, Any] = Body(...)):
+    """Match a farmer profile against the entire database of verified schemes."""
+    return scheme_service.match_schemes_for_farmer(profile)

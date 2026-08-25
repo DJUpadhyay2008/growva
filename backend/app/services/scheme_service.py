@@ -1,49 +1,51 @@
-from sqlalchemy.orm import Session
-from app.database.models import GovernmentSchemeModel
-from app.schemas.scheme import SchemeEligibilityCheckRequest, SchemeEligibilityCheckResponse
-from typing import List, Optional
+"""
+Scheme Service for querying government schemes and executing eligibility checks.
+"""
 
-def get_all_schemes(db: Session, category: Optional[str] = None) -> List[GovernmentSchemeModel]:
-    q = db.query(GovernmentSchemeModel)
+from typing import List, Dict, Any, Optional
+from app.data.schemes_data import SCHEMES_DATABASE
+from app.services.eligibility_service import evaluate_scheme_answers, match_farmer_profile_all
+
+def get_all_schemes(category: Optional[str] = None, state: Optional[str] = None) -> List[Dict[str, Any]]:
+    results = SCHEMES_DATABASE
     if category and category.lower() != 'all':
-        q = q.filter(GovernmentSchemeModel.category.ilike(f"%{category}%"))
-    return q.all()
+        results = [s for s in results if category.lower() in s.get("category", "").lower() or category.lower() in s.get("categoryLabel", "").lower()]
+    if state and state.lower() != 'all':
+        results = [
+            s for s in results 
+            if "All States" in s.get("states", []) or "All States & UTs" in s.get("states", []) or any(state.lower() in st.lower() for st in s.get("states", []))
+        ]
+    return results
 
-def check_scheme_eligibility(db: Session, req: SchemeEligibilityCheckRequest) -> SchemeEligibilityCheckResponse:
-    scheme = db.query(GovernmentSchemeModel).filter(GovernmentSchemeModel.code.ilike(req.scheme_code)).first()
-    
+def get_scheme_by_id(scheme_id: str) -> Optional[Dict[str, Any]]:
+    for s in SCHEMES_DATABASE:
+        if s["id"].lower() == scheme_id.lower() or s["code"].lower() == scheme_id.lower():
+            return s
+    return None
+
+def check_single_scheme_eligibility(scheme_id: str, answers: Dict[str, Any]) -> Dict[str, Any]:
+    scheme = get_scheme_by_id(scheme_id)
     if not scheme:
-        return SchemeEligibilityCheckResponse(
-            scheme_code=req.scheme_code,
-            is_eligible=False,
-            status="Scheme Not Found",
-            reasons=["The requested scheme code is not recognized."],
-            documents_needed=[],
-            next_steps="Please check the scheme code and try again."
-        )
-
-    is_eligible = True
-    reasons = []
+        return {
+            "scheme_id": scheme_id,
+            "scheme_name": "Unknown Scheme",
+            "status": "not_eligible",
+            "reasons": ["Scheme record not found in verified database."],
+            "required_documents": [],
+            "application_steps": [],
+            "official_website": "https://myscheme.gov.in"
+        }
     
-    if not req.is_registered_farmer:
-        is_eligible = False
-        reasons.append("Land registration / Farmer ID verification is required.")
-    else:
-        reasons.append("Farmer registration status verified.")
+    status, reasons = evaluate_scheme_answers(scheme, answers)
+    return {
+        "scheme_id": scheme["id"],
+        "scheme_name": scheme["name"],
+        "status": status,
+        "reasons": reasons,
+        "required_documents": scheme.get("requiredDocuments", []),
+        "application_steps": scheme.get("applicationSteps", []),
+        "official_website": scheme.get("officialWebsite", "https://myscheme.gov.in")
+    }
 
-    if req.land_holding_acres > 15 and req.scheme_code == "PM-KISAN":
-        is_eligible = False
-        reasons.append("PM-KISAN targets small and marginal landholding farmers.")
-    else:
-        reasons.append("Land holding criteria satisfied.")
-
-    docs = [d.strip() for d in scheme.required_documents.split(",") if d.strip()]
-
-    return SchemeEligibilityCheckResponse(
-        scheme_code=scheme.code,
-        is_eligible=is_eligible,
-        status="Eligible for Subsidy" if is_eligible else "Action Required",
-        reasons=reasons,
-        documents_needed=docs,
-        next_steps=f"Visit {scheme.apply_url} or your local Krishi Vigyan Kendra to submit application."
-    )
+def match_schemes_for_farmer(profile: Dict[str, Any]) -> Dict[str, Any]:
+    return match_farmer_profile_all(profile)

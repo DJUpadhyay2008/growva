@@ -177,63 +177,49 @@ export async function fetchMarketAnalysis(locationName = 'Vadodara, Gujarat', cr
   }
 }
 
-export async function fetchSchemes(category = '') {
+export async function fetchSchemes(category = '', state = '') {
   try {
-    const params = category ? `?category=${encodeURIComponent(category)}` : '';
-    const res = await fetch(`${API_BASE_URL}/schemes${params}`);
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (state) params.append('state', state);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    const res = await fetch(`${API_BASE_URL}/schemes${queryString}`);
     if (!res.ok) throw new Error(`Server status ${res.status}`);
     return await res.json();
   } catch (error) {
     console.warn('Backend Schemes API fail, using local scheme fallback:', error);
-    return [
-      {
-        code: "PM-KISAN",
-        title: "Pradhan Mantri Kisan Samman Nidhi",
-        category: "Income support",
-        short_description: "Direct income support of ₹6,000 per year in three equal installments to eligible landholding farmer families.",
-        full_description: "Direct benefit transfer of ₹6,000/year to bank account via Aadhaar-linked account.",
-        benefit_amount: "₹6,000 / year",
-        eligibility_criteria: "All landholding farmers with cultivable land up to standard limits.",
-        required_documents: "Aadhaar Card, Land Ownership Document, Bank Account Passbook",
-        apply_url: "https://pmkisan.gov.in/"
-      },
-      {
-        code: "PMFBY",
-        title: "Pradhan Mantri Fasal Bima Yojana",
-        category: "Crop insurance",
-        short_description: "Comprehensive crop insurance coverage against non-preventable natural risks from pre-sowing to post-harvest.",
-        full_description: "Low premium rate (1.5% Rabi, 2% Kharif, 5% commercial) with full claim payout.",
-        benefit_amount: "Up to 100% Crop Value",
-        eligibility_criteria: "All farmers growing notified crops in notified areas.",
-        required_documents: "Aadhaar Card, Land Sowing Certificate, Bank Passbook, Land Record",
-        apply_url: "https://pmfby.gov.in/"
-      }
-    ];
+    return null;
   }
 }
 
-export async function checkSchemeEligibility(schemeCode, landAcres = 3, isRegistered = true) {
+export async function checkSchemeEligibility(schemeId, answers = {}) {
   try {
-    const res = await fetch(`${API_BASE_URL}/schemes/eligibility`, {
+    const res = await fetch(`${API_BASE_URL}/schemes/${schemeId}/eligibility`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        scheme_code: schemeCode,
-        is_registered_farmer: isRegistered,
-        land_holding_acres: landAcres,
-      }),
+      body: JSON.stringify({ answers }),
     });
     if (!res.ok) throw new Error(`Server status ${res.status}`);
     return await res.json();
   } catch (error) {
-    return {
-      scheme_code: schemeCode,
-      is_eligible: true,
-      status: "Eligible for Subsidy",
-      reasons: ["Farmer registration status verified.", "Land holding criteria satisfied (3 acres)."],
-      documents_needed: ["Aadhaar Card", "7/12 Land Document", "Bank Account Passbook"],
-      next_steps: "Submit application online via official portal or visit local Krishi Vigyan Kendra."
-    };
+    console.warn('Backend scheme eligibility check failed, calculating local fallback:', error);
+    return null;
+  }
+}
+
+export async function matchFarmerSchemes(farmerProfile = {}) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/schemes/match`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(farmerProfile),
+    });
+    if (!res.ok) throw new Error(`Server status ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.warn('Backend scheme match failed, using local fallback:', error);
+    return null;
   }
 }
 
@@ -285,6 +271,54 @@ export async function sendChatMessage(messages, provider = 'openrouter', apiKey 
       provider_used: `${provider} (Fallback)`,
       model_used: model
     };
+  }
+}
+
+export async function fetchByProducts(search = '', crop = '', category = '', difficulty = '') {
+  try {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (crop) params.append('crop', crop);
+    if (category) params.append('category', category);
+    if (difficulty) params.append('difficulty', difficulty);
+
+    const res = await fetch(`${API_BASE_URL}/byproducts?${params.toString()}`);
+    if (!res.ok) throw new Error(`Server status ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.warn('Backend fetchByProducts failed, using local fallback:', error);
+    return [];
+  }
+}
+
+export async function fetchByProductById(id) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/byproducts/${id}`);
+    if (!res.ok) throw new Error(`Server status ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.warn(`Backend fetchByProductById for ${id} failed:`, error);
+    return null;
+  }
+}
+
+export async function analyzeCropResidue(crop, areaAcres = 3.0, expectedYieldTonnes = null, location = 'Vadodara, Gujarat') {
+  try {
+    const res = await fetch(`${API_BASE_URL}/byproducts/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        crop,
+        area_acres: Number(areaAcres),
+        expected_yield_tonnes: expectedYieldTonnes ? Number(expectedYieldTonnes) : null,
+        location
+      }),
+    });
+    if (!res.ok) throw new Error(`Server status ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.warn('Backend analyzeCropResidue failed, using local fallback:', error);
+    return null;
   }
 }
 
