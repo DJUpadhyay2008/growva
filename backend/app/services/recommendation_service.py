@@ -6,10 +6,10 @@ from app.schemas.recommendation import (
 )
 from app.services.weather_service import get_current_weather_and_forecast
 from typing import List
-import math
+from datetime import datetime
 
 def generate_crop_recommendations(db: Session, req: RecommendationRequest) -> RecommendationResponse:
-    # Get weather data for the location
+    # 1. Fetch live weather & forecast for requested location
     loc_str = req.location or "Vadodara, Gujarat"
     weather = get_current_weather_and_forecast(loc_str)
     
@@ -26,65 +26,183 @@ def generate_crop_recommendations(db: Session, req: RecommendationRequest) -> Re
     crops = db.query(CropModel).all()
     results = []
 
+    current_month = datetime.now().month # 1 to 12
+
+    # Estimate annual rainfall potential based on live humidity, precipitation, & weather condition
+    w_cond_lower = weather_cond.lower()
+    if user_humidity < 50 or "sunny" in w_cond_lower or "dry" in w_cond_lower:
+        est_rainfall = max(180.0, user_rain_mm * 10.0 + 220.0)
+    elif user_humidity > 80 or "rain" in w_cond_lower or "thunderstorm" in w_cond_lower:
+        est_rainfall = max(850.0, user_rain_mm * 20.0 + 800.0)
+    else:
+        est_rainfall = max(450.0, user_rain_mm * 15.0 + 480.0)
+
     for crop in crops:
-        # 1. Climate Suitability (400-1500mm standard)
-        climate_score = 90
-        if crop.min_rainfall <= 800 <= crop.max_rainfall:
-            climate_score = 95
-        elif 800 < crop.min_rainfall:
-            penalty = min(30, (crop.min_rainfall - 800) / 20)
-            climate_score -= int(penalty)
-        climate_score = max(50, min(99, climate_score))
-
-        # 2. Season Suitability
-        season_score = 92
-        if "kharif" in crop.season.lower() or "year-round" in crop.season.lower() or "varies" in crop.season.lower():
-            season_score = 95
-        else:
-            season_score = 78
-
-        # 3. Current Conditions Suitability (temp & soil/pH)
-        current_score = 88
+        # -------------------------------------------------------------
+        # A. Temperature Suitability (0 - 100)
+        # -------------------------------------------------------------
         if crop.min_temp <= user_temp <= crop.max_temp:
-            current_score = 92
-        else:
-            penalty = min(25, abs(user_temp - (crop.min_temp + crop.max_temp)/2) * 1.5)
-            current_score -= int(penalty)
-        current_score = max(45, min(99, current_score))
+            ideal_center = (crop.min_temp + crop.max_temp) / 2.0
+            dist = abs(user_temp - ideal_center)
+            half_range = max(1.0, (crop.max_temp - crop.min_temp) / 2.0)
+            temp_score = 98 - int((dist / half_range) * 15)
+        elif user_temp < crop.min_temp:
+            deficit = crop.min_temp - user_temp
+            if deficit > 10.0 or user_temp <= 3.0:
+                temp_score = max(2, int(25 - deficit * 3.0))
+            else:
+                temp_score = max(10, int(80 - deficit * 7.0))
+        else: # user_temp > crop.max_temp
+            excess = user_temp - crop.max_temp
+            if excess > 8.0:
+                temp_score = max(5, int(35 - excess * 4.0))
+            else:
+                temp_score = max(15, int(80 - excess * 6.5))
 
-        # 4. Forecast Suitability (7-14 day forecast window)
-        forecast_score = 85
-        if user_rain_prob > 75:
-            forecast_score = 65 # heavy rain might hamper immediate sowing
-        elif 30 <= user_rain_prob <= 70:
-            forecast_score = 92 # ideal moisture for sowing
-        else:
-            forecast_score = 80 # dry window
+        # -------------------------------------------------------------
+        # B. Humidity & Water Requirement Alignment (0 - 100)
+        # -------------------------------------------------------------
+        w_req = crop.water_req.lower()
+        if "very high" in w_req or "high" in w_req:
+            if user_humidity >= 65:
+                humidity_score = 95
+            else:
+                humidity_score = max(20, int(95 - (65 - user_humidity) * 2.0))
+        elif "low" in w_req:
+            if user_humidity <= 60:
+                humidity_score = 96
+            else:
+                humidity_score = max(25, int(96 - (user_humidity - 60) * 2.0))
+        else: # Medium
+            if 50 <= user_humidity <= 80:
+                humidity_score = 92
+            else:
+                humidity_score = max(35, int(92 - abs(user_humidity - 65) * 1.4))
 
-        # Weighted final score
+        # Current Conditions combined (Temp 70% + Humidity 30%)
+        current_score = int(0.70 * temp_score + 0.30 * humidity_score)
+        current_score = max(2, min(99, current_score))
+
+        # -------------------------------------------------------------
+        # C. Climate & Water Availability Suitability (0 - 100)
+        # -------------------------------------------------------------
+        if crop.min_rainfall <= est_rainfall <= crop.max_rainfall:
+            climate_score = 96
+        elif est_rainfall < crop.min_rainfall:
+            shortfall = crop.min_rainfall - est_rainfall
+            climate_score = max(15, int(92 - (shortfall / crop.min_rainfall) * 65))
+        else:
+            overflow = est_rainfall - crop.max_rainfall
+            climate_score = max(30, int(92 - (overflow / crop.max_rainfall) * 45))
+
+        # Soil & pH adjustment
+        crop_soil_lower = crop.soil_type.lower()
+        soil_match = False
+        soil_keywords = ["loam", "clay", "sandy", "black", "alluvial", "red"]
+        for kw in soil_keywords:
+            if kw in user_soil and kw in crop_soil_lower:
+                soil_match = True
+                break
+        
+        soil_score = 95 if (soil_match or "loam" in user_soil) else 75
+
+        if crop.ideal_ph_min <= user_ph <= crop.ideal_ph_max:
+            ph_score = 95
+        else:
+            ph_score = max(50, int(95 - abs(user_ph - (crop.ideal_ph_min + crop.ideal_ph_max)/2) * 15))
+
+        soil_ph_factor = (soil_score * 0.6 + ph_score * 0.4)
+        climate_score = int(climate_score * 0.7 + soil_ph_factor * 0.3)
+        climate_score = max(10, min(99, climate_score))
+
+        # -------------------------------------------------------------
+        # D. Season Alignment (0 - 100)
+        # -------------------------------------------------------------
+        c_season = crop.season.lower()
+        if 6 <= current_month <= 10: # Kharif (Monsoon)
+            if "kharif" in c_season or "monsoon" in c_season:
+                season_score = 96
+            elif "perennial" in c_season or "year-round" in c_season or "seasonal" in c_season:
+                season_score = 90
+            elif "summer" in c_season:
+                season_score = 72
+            else: # Rabi (Winter)
+                season_score = 55
+        elif 11 <= current_month or current_month <= 3: # Rabi (Winter)
+            if "rabi" in c_season or "winter" in c_season:
+                season_score = 96
+            elif "perennial" in c_season or "year-round" in c_season or "seasonal" in c_season:
+                season_score = 90
+            elif "temperate" in c_season:
+                season_score = 95
+            else: # Kharif
+                season_score = 58
+        else: # Zaid (Summer: April-May)
+            if "summer" in c_season or "zaid" in c_season:
+                season_score = 96
+            elif "perennial" in c_season or "year-round" in c_season:
+                season_score = 90
+            else:
+                season_score = 65
+
+        # -------------------------------------------------------------
+        # E. Forecast & Weather Risk Suitability (0 - 100)
+        # -------------------------------------------------------------
+        if "snow" in w_cond_lower or user_temp <= 3.0:
+            if "temperate" in c_season or crop.min_temp <= 5.0:
+                forecast_score = 88
+            else:
+                forecast_score = 10 # Frost danger
+        elif user_rain_prob > 75 or user_rain_mm > 50:
+            forecast_score = 65
+        elif 25 <= user_rain_prob <= 70:
+            forecast_score = 94
+        else:
+            forecast_score = 82
+
+        # -------------------------------------------------------------
+        # F. Overall Weighted Score Calculation
+        # -------------------------------------------------------------
         match_score = int(
-            0.30 * climate_score +
+            0.35 * current_score +
+            0.25 * climate_score +
             0.25 * season_score +
-            0.25 * current_score +
-            0.20 * forecast_score
+            0.15 * forecast_score
         )
-        match_score = max(45, min(98, match_score))
 
-        if match_score >= 86:
+        # Disqualification cap if temp or climate is severely unsuitable
+        if temp_score < 20:
+            match_score = min(match_score, temp_score + 10)
+        if climate_score < 30:
+            match_score = min(match_score, climate_score + 15)
+
+        match_score = max(5, min(98, match_score))
+
+        if match_score >= 82:
             rating = "Highly Suitable"
-        elif match_score >= 70:
+        elif match_score >= 65:
             rating = "Suitable"
-        else:
+        elif match_score >= 45:
             rating = "Moderate"
+        else:
+            rating = "Low Suitability"
 
         # Risk breakdown & warnings
         risk_warnings = []
-        if user_rain_prob > 70 or user_rain_mm > 50:
-            risk_warnings.append(f"Heavy rainfall risk expected in short-term forecast ({user_rain_prob}% rain chance)")
+        if "snow" in w_cond_lower or user_temp <= 3.0:
+            if crop.min_temp > 5.0:
+                risk_warnings.append(f"Freezing temperature ({user_temp}°C). Frost risk for {crop.name}.")
+                sowing_status = "WAIT"
+                sowing_win = f"Delay sowing until temperature rises above minimum threshold ({crop.min_temp}°C)."
+            else:
+                sowing_status = "GOOD"
+                sowing_win = f"Cold-hardy crop! Suitable for current mountain climate ({user_temp}°C)."
+        elif user_rain_prob > 70 or user_rain_mm > 50:
+            risk_warnings.append(f"Heavy rainfall risk expected in forecast ({user_rain_prob}% rain chance)")
             sowing_status = "WAIT"
-            sowing_win = f"Consider delaying sowing by 3–5 days due to high rain probability ({user_rain_prob}%)."
+            sowing_win = f"Consider delaying sowing by 3–5 days due to heavy rain probability ({user_rain_prob}%)."
         elif user_temp > crop.max_temp - 2:
-            risk_warnings.append(f"High temperature warning ({user_temp}°C near crop max limit of {crop.max_temp}°C)")
+            risk_warnings.append(f"High temperature warning ({user_temp}°C near crop limit of {crop.max_temp}°C)")
             sowing_status = "HEAT_RISK"
             sowing_win = "Wait for temperature to cool slightly for optimal germination."
         else:
@@ -102,11 +220,11 @@ def generate_crop_recommendations(db: Session, req: RecommendationRequest) -> Re
             risk_level = "HIGH"
             risk_score = 45
 
-        # Reasons
+        # Reasons tailored to real weather values
         reasons = [
-            f"Climate is suitable for {crop.name} in this region",
-            f"Temperature ({user_temp}°C) is within growth range ({crop.min_temp}°C - {crop.max_temp}°C)",
-            f"Water requirement ({crop.water_req}) matches local availability"
+            f"Temperature ({user_temp}°C) is {'optimal' if crop.min_temp <= user_temp <= crop.max_temp else 'suboptimal'} for {crop.name} ({crop.min_temp}°C - {crop.max_temp}°C)",
+            f"Humidity ({user_humidity}%) aligns with {crop.name}'s {crop.water_req.lower()} water requirement",
+            f"Soil fit for {req.soil_type or 'Fertile loam'} with pH {user_ph} (Ideal: {crop.ideal_ph_min}-{crop.ideal_ph_max})"
         ]
         
         risk_factors = risk_warnings[:]
@@ -158,19 +276,19 @@ def generate_crop_recommendations(db: Session, req: RecommendationRequest) -> Re
     if top_crop:
         if top_crop.sowing_status == "GOOD":
             advisory = (
-                f"Conditions are favorable for sowing {top_crop.crop_name} in {weather['location']}. "
-                f"The upcoming 7-day forecast shows manageable rainfall risk ({user_rain_prob}%) "
-                f"and ideal temperature ({user_temp}°C), making this an optimal sowing window."
+                f"Conditions in {weather['location']} ({user_temp}°C, {user_humidity}% humidity) favor sowing {top_crop.crop_name} "
+                f"with top suitability ({top_crop.match_score}%). "
+                f"Upcoming forecast indicates suitable moisture and temperature levels."
             )
         elif top_crop.sowing_status == "WAIT":
             advisory = (
-                f"Heavy rainfall ({user_rain_mm} mm expected, {user_rain_prob}% rain chance) is forecasted in {weather['location']}. "
-                f"Consider delaying sowing {top_crop.crop_name} by 4–6 days until field moisture stabilizes."
+                f"Weather alert for {weather['location']}: current conditions ({user_temp}°C, {user_rain_prob}% rain/frost risk) "
+                f"require caution. Consider delaying sowing {top_crop.crop_name} until climate stabilizes."
             )
         else:
             advisory = (
-                f"High temperature ({user_temp}°C) is expected over the next week in {weather['location']}. "
-                f"Consider waiting for a slightly cooler moisture window before sowing {top_crop.crop_name}."
+                f"High temperature ({user_temp}°C) in {weather['location']} requires heat management. "
+                f"Wait for slightly cooler moisture window before sowing {top_crop.crop_name}."
             )
     else:
         advisory = "No recommendation advisory generated."
@@ -183,7 +301,7 @@ def generate_crop_recommendations(db: Session, req: RecommendationRequest) -> Re
         rainfall_expected=user_rain_mm,
         condition=weather_cond,
         soil_type=req.soil_type or "Fertile loam",
-        top_recommendations=results[:10],
+        top_recommendations=results[:12],
         sowing_advisory=advisory,
         is_demo=is_demo
     )

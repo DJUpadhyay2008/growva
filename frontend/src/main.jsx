@@ -121,19 +121,21 @@ function CropCard({ item, t, lang, onSelect }) {
 
 function PlannerSection({ t, lang }) {
   const [locationInput, setLocationInput] = useState('Vadodara, Gujarat');
+  const [soilInput, setSoilInput] = useState('Fertile loam');
   const [loading, setLoading] = useState(false);
   const [plannerData, setPlannerData] = useState(null);
   const [selectedCropName, setSelectedCropName] = useState(null);
 
   useEffect(() => {
-    handleAnalyze('Vadodara, Gujarat');
+    handleAnalyze('Vadodara, Gujarat', 'Fertile loam');
   }, []);
 
-  const handleAnalyze = async (locToFetch) => {
+  const handleAnalyze = async (locToFetch, soilToFetch) => {
     const loc = locToFetch || locationInput || 'Vadodara, Gujarat';
+    const soil = soilToFetch || soilInput || 'Fertile loam';
     setLoading(true);
     try {
-      const data = await fetchCropRecommendations(loc);
+      const data = await fetchCropRecommendations(loc, soil);
       setPlannerData(data);
       if (data && data.top_recommendations && data.top_recommendations.length > 0) {
         setSelectedCropName(data.top_recommendations[0].crop_name);
@@ -169,33 +171,55 @@ function PlannerSection({ t, lang }) {
       <div className="feature-text">
         <span className="section-kicker">{t.planner_kicker || 'FARM LIFE CYCLE PLANNER'}</span>
         <h2>{t.planner_title || 'Know what to do next on your farm'}</h2>
-        <p>{t.planner_sub || 'Weather-aware timeline from sowing to harvest. Dynamic alerts connected to rainfall forecasts and crop growth stages.'}</p>
+        <p>{t.planner_sub || 'Weather-aware timeline from sowing to harvest. Dynamic alerts connected to temperature, rainfall forecasts, and humidity.'}</p>
 
         <div className="planner-location-box">
-          <div className="location-input-row">
+          <div className="location-input-row" style={{ flexWrap: 'wrap', gap: '8px' }}>
             <input
               type="text"
               value={locationInput}
               onChange={(e) => setLocationInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAnalyze(locationInput)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAnalyze(locationInput, soilInput)}
               placeholder={t.planner_input_ph || 'Enter city / district...'}
+              style={{ flex: '1 1 180px' }}
             />
-            <button onClick={() => handleAnalyze(locationInput)} disabled={loading}>
+            <select
+              value={soilInput}
+              onChange={(e) => {
+                setSoilInput(e.target.value);
+                handleAnalyze(locationInput, e.target.value);
+              }}
+              style={{ padding: '0 12px', height: '44px', borderRadius: '10px', background: 'rgba(255,255,255,0.06)', color: 'var(--text-main)', border: '1px solid rgba(255,255,255,0.15)', outline: 'none', cursor: 'pointer' }}
+            >
+              <option value="Fertile loam">Loam Soil</option>
+              <option value="Black cotton soil">Black Cotton Soil</option>
+              <option value="Sandy loam">Sandy Soil</option>
+              <option value="Clay loam">Clay Soil</option>
+              <option value="Alluvial soil">Alluvial Soil</option>
+              <option value="Red soil">Red Soil</option>
+            </select>
+            <button onClick={() => handleAnalyze(locationInput, soilInput)} disabled={loading}>
               {loading ? (t.planner_analyzing || 'Analyzing...') : (t.planner_btn || 'Analyze farm')}
             </button>
           </div>
           <div className="location-chips">
             <span>{t.planner_quick || 'Quick locations:'}</span>
-            {['Vadodara, Gujarat', 'Ahmedabad, Gujarat', 'Rajkot, Gujarat', 'Pune, Maharashtra', 'Ludhiana, Punjab'].map((loc) => (
+            {[
+              { label: 'Vadodara', loc: 'Vadodara, Gujarat' },
+              { label: 'Amarnath', loc: 'Amarnath, Jammu and Kashmir' },
+              { label: 'Jaisalmer', loc: 'Jaisalmer, Rajasthan' },
+              { label: 'Kochi', loc: 'Kochi, Kerala' },
+              { label: 'Ludhiana', loc: 'Ludhiana, Punjab' }
+            ].map((item) => (
               <button
-                key={loc}
+                key={item.loc}
                 className="location-chip"
                 onClick={() => {
-                  setLocationInput(loc);
-                  handleAnalyze(loc);
+                  setLocationInput(item.loc);
+                  handleAnalyze(item.loc, soilInput);
                 }}
               >
-                {loc.split(',')[0]}
+                {item.label}
               </button>
             ))}
           </div>
@@ -203,9 +227,9 @@ function PlannerSection({ t, lang }) {
 
         {plannerData && plannerData.top_recommendations && (
           <div className="crop-selector-box">
-            <span className="crop-selector-label">{(t.planner_top || 'Top suitable crops for')} {plannerData.location.split(',')[0]}</span>
+            <span className="crop-selector-label">{(t.planner_top || 'Top suitable crops for')} {plannerData.location.split(',')[0]} ({plannerData.temperature}°C)</span>
             <div className="crop-chips-row">
-              {plannerData.top_recommendations.slice(0, 5).map((crop) => (
+              {plannerData.top_recommendations.slice(0, 6).map((crop) => (
                 <button
                   key={crop.crop_name}
                   className={`crop-chip-btn ${selectedCrop?.crop_name === crop.crop_name ? 'active' : ''}`}

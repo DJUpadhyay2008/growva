@@ -7,7 +7,10 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./growva.db")
+    db_url: str = os.getenv("DATABASE_URL", "sqlite:///./growva.db")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL: str = db_url
     
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [
@@ -25,3 +28,4 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 settings = Settings()
+

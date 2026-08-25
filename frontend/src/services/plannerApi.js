@@ -1,6 +1,6 @@
-// API Service for Growva Crop Planning, Weather, Mandi Prices, Schemes & Disease Diagnosis
+const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (isLocal ? 'http://localhost:8000/api/v1' : 'https://growva-backend.onrender.com/api/v1');
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://growva-backend.onrender.com/api/v1';
 
 export async function fetchCropRecommendations(location, soilType = 'Fertile loam') {
   try {
@@ -238,100 +238,206 @@ export async function sendChatMessage(messages, provider = 'openrouter', apiKey 
 }
 
 function getFallbackRecommendationData(location = 'Vadodara, Gujarat') {
-  const isVadodara = location.toLowerCase().includes('vadodara');
+  const locLower = (location || '').toLowerCase();
   const locName = location || 'Vadodara, Gujarat';
   
-  const temp = isVadodara ? 29.5 : 28.0;
-  const humidity = isVadodara ? 74.0 : 68.0;
-  const rainProb = isVadodara ? 64.0 : 45.0;
-  const rainMm = isVadodara ? 62.0 : 15.0;
+  let temp = 28.5;
+  let humidity = 68.0;
+  let rainProb = 50.0;
+  let rainMm = 15.0;
+  let topCrops = [];
 
-  const topCrops = [
-    {
-      crop_name: 'Groundnut',
-      category: 'Pulses & Oilseeds',
-      match_score: 91,
-      suitability_rating: 'Highly Suitable',
-      scores: { climate_suitability: 93, season_suitability: 95, current_conditions: 88, forecast_suitability: 85 },
-      risk: { level: 'LOW', score: 85, warnings: ['Low weather risk detected for current sowing window.'] },
-      duration_days: 120,
-      growth_stages: [
-        { name: 'Prepare field', start_day: 0, end_day: 10 },
-        { name: 'Sowing window', start_day: 11, end_day: 25 },
-        { name: 'Germination & Vegetative', start_day: 26, end_day: 60 },
-        { name: 'Flowering & Pods', start_day: 61, end_day: 90 },
-        { name: 'Expected harvest', start_day: 91, end_day: 120 }
-      ],
-      reasons: ['Climate suitability is high', 'Temperature is within preferred 20-35°C range', 'Water availability matches requirement'],
-      risk_factors: ['No major weather risks detected'],
-      expected_yield: '1.8 - 2.5 tonnes/ha',
-      suggested_sowing_window: 'Sow within the next 3–5 days (Favorable weather window)',
-      sowing_status: 'GOOD'
-    },
-    {
-      crop_name: 'Cotton',
-      category: 'Crops',
-      match_score: 86,
-      suitability_rating: 'Highly Suitable',
-      scores: { climate_suitability: 88, season_suitability: 90, current_conditions: 85, forecast_suitability: 80 },
-      risk: { level: 'LOW', score: 82, warnings: ['Monitor short-term moisture level.'] },
-      duration_days: 160,
-      growth_stages: [
-        { name: 'Prepare field', start_day: 0, end_day: 14 },
-        { name: 'Sowing window', start_day: 15, end_day: 35 },
-        { name: 'Vegetative growth', start_day: 36, end_day: 80 },
-        { name: 'Boll formation', start_day: 81, end_day: 120 },
-        { name: 'Expected harvest', start_day: 121, end_day: 160 }
-      ],
-      reasons: ['Deep fertile soil is ideal for cotton', 'Warm climate accelerates boll development'],
-      risk_factors: ['Requires well-drained soil during germination'],
-      expected_yield: '2.0 - 3.0 tonnes/ha',
-      suggested_sowing_window: 'Sow after soil preparation within 5 days',
-      sowing_status: 'GOOD'
-    },
-    {
-      crop_name: 'Maize',
-      category: 'Crops',
-      match_score: 79,
-      suitability_rating: 'Suitable',
-      scores: { climate_suitability: 80, season_suitability: 82, current_conditions: 78, forecast_suitability: 75 },
-      risk: { level: 'MEDIUM', score: 68, warnings: ['Requires consistent nitrogen application.'] },
-      duration_days: 100,
-      growth_stages: [
-        { name: 'Prepare field', start_day: 0, end_day: 8 },
-        { name: 'Sowing window', start_day: 9, end_day: 20 },
-        { name: 'Tasseling', start_day: 21, end_day: 55 },
-        { name: 'Cob filling', start_day: 56, end_day: 80 },
-        { name: 'Expected harvest', start_day: 81, end_day: 100 }
-      ],
-      reasons: ['Moderate water requirement', 'Adaptable to local soil'],
-      risk_factors: ['Avoid waterlogging during early germination'],
-      expected_yield: '3.5 - 5.0 tonnes/ha',
-      suggested_sowing_window: 'Sow during clear rain window',
-      sowing_status: 'GOOD'
-    },
-    {
-      crop_name: 'Soybean',
-      category: 'Pulses',
-      match_score: 73,
-      suitability_rating: 'Suitable',
-      scores: { climate_suitability: 75, season_suitability: 76, current_conditions: 72, forecast_suitability: 70 },
-      risk: { level: 'LOW', score: 80, warnings: ['Ensure adequate soil phosphorus.'] },
-      duration_days: 105,
-      growth_stages: [
-        { name: 'Prepare field', start_day: 0, end_day: 8 },
-        { name: 'Sowing window', start_day: 9, end_day: 22 },
-        { name: 'Vegetative growth', start_day: 23, end_day: 55 },
-        { name: 'Pod filling', start_day: 56, end_day: 85 },
-        { name: 'Expected harvest', start_day: 86, end_day: 105 }
-      ],
-      reasons: ['Fixes nitrogen naturally in soil', 'Short growth duration'],
-      risk_factors: ['Sensitive to early weed competition'],
-      expected_yield: '1.5 - 2.2 tonnes/ha',
-      suggested_sowing_window: 'Sow within 4 days',
-      sowing_status: 'GOOD'
-    }
-  ];
+  if (locLower.includes('amarnath') || locLower.includes('srinagar') || locLower.includes('shimla') || locLower.includes('leh') || locLower.includes('manali')) {
+    temp = 8.5;
+    humidity = 78.0;
+    rainProb = 40.0;
+    rainMm = 10.0;
+    topCrops = [
+      {
+        crop_name: 'Apple',
+        category: 'Fruits',
+        match_score: 94,
+        suitability_rating: 'Highly Suitable',
+        scores: { climate_suitability: 95, season_suitability: 96, current_conditions: 92, forecast_suitability: 90 },
+        risk: { level: 'LOW', score: 90, warnings: ['Ideal temperate mountain climate.'] },
+        duration_days: 365,
+        growth_stages: [
+          { name: 'Prepare field', start_day: 0, end_day: 30 },
+          { name: 'Sowing window', start_day: 31, end_day: 60 },
+          { name: 'Vegetative growth', start_day: 61, end_day: 180 },
+          { name: 'Flowering & Fruit set', start_day: 181, end_day: 280 },
+          { name: 'Expected harvest', start_day: 281, end_day: 365 }
+        ],
+        reasons: ['Cold chilling hours ideal for apple bud break', 'Elevation and temperature match temperate zone requirements'],
+        risk_factors: ['Monitor for late spring frost'],
+        expected_yield: '12 - 22 tonnes/ha',
+        suggested_sowing_window: 'Sow or plant saplings during dormant winter/early spring window',
+        sowing_status: 'GOOD'
+      },
+      {
+        crop_name: 'Barley',
+        category: 'Crops',
+        match_score: 89,
+        suitability_rating: 'Highly Suitable',
+        scores: { climate_suitability: 90, season_suitability: 92, current_conditions: 88, forecast_suitability: 85 },
+        risk: { level: 'LOW', score: 85, warnings: ['Cold tolerant crop.'] },
+        duration_days: 110,
+        growth_stages: [
+          { name: 'Prepare field', start_day: 0, end_day: 10 },
+          { name: 'Sowing window', start_day: 11, end_day: 25 },
+          { name: 'Tillering', start_day: 26, end_day: 55 },
+          { name: 'Heading', start_day: 56, end_day: 85 },
+          { name: 'Expected harvest', start_day: 86, end_day: 110 }
+        ],
+        reasons: ['High cold tolerance (8°C - 28°C)', 'Thrives in temperate soils'],
+        risk_factors: ['Avoid waterlogging during thaw'],
+        expected_yield: '3.0 - 4.0 tonnes/ha',
+        suggested_sowing_window: 'Sow within next 5 days',
+        sowing_status: 'GOOD'
+      },
+      {
+        crop_name: 'Potato',
+        category: 'Vegetables',
+        match_score: 84,
+        suitability_rating: 'Highly Suitable',
+        scores: { climate_suitability: 86, season_suitability: 88, current_conditions: 82, forecast_suitability: 80 },
+        risk: { level: 'LOW', score: 82, warnings: ['Optimal tuber development range.'] },
+        duration_days: 100,
+        growth_stages: [
+          { name: 'Prepare field', start_day: 0, end_day: 10 },
+          { name: 'Sowing window', start_day: 11, end_day: 25 },
+          { name: 'Vegetative growth', start_day: 26, end_day: 55 },
+          { name: 'Tuber bulking', start_day: 56, end_day: 80 },
+          { name: 'Expected harvest', start_day: 81, end_day: 100 }
+        ],
+        reasons: ['Cool weather promotes high tuber yield', 'Loose friable soil match'],
+        risk_factors: ['Watch for late blight in high moisture'],
+        expected_yield: '20 - 35 tonnes/ha',
+        suggested_sowing_window: 'Sow tuber sets in loose soil',
+        sowing_status: 'GOOD'
+      }
+    ];
+  } else if (locLower.includes('jaipur') || locLower.includes('jaisalmer') || locLower.includes('jodhpur') || locLower.includes('rajkot')) {
+    temp = 33.0;
+    humidity = 42.0;
+    rainProb = 20.0;
+    rainMm = 2.0;
+    topCrops = [
+      {
+        crop_name: 'Bajra',
+        category: 'Crops',
+        match_score: 93,
+        suitability_rating: 'Highly Suitable',
+        scores: { climate_suitability: 95, season_suitability: 94, current_conditions: 92, forecast_suitability: 90 },
+        risk: { level: 'LOW', score: 90, warnings: ['Highly drought resilient.'] },
+        duration_days: 85,
+        growth_stages: [
+          { name: 'Prepare field', start_day: 0, end_day: 8 },
+          { name: 'Sowing window', start_day: 9, end_day: 20 },
+          { name: 'Vegetative', start_day: 21, end_day: 45 },
+          { name: 'Grain filling', start_day: 46, end_day: 70 },
+          { name: 'Expected harvest', start_day: 71, end_day: 85 }
+        ],
+        reasons: ['Extreme heat and drought tolerance (up to 42°C)', 'Thrives in low rainfall & sandy soils'],
+        risk_factors: ['Minimal moisture requirement satisfied'],
+        expected_yield: '2.0 - 3.0 tonnes/ha',
+        suggested_sowing_window: 'Sow immediately for optimal moisture capture',
+        sowing_status: 'GOOD'
+      },
+      {
+        crop_name: 'Cumin',
+        category: 'Spices',
+        match_score: 88,
+        suitability_rating: 'Highly Suitable',
+        scores: { climate_suitability: 90, season_suitability: 90, current_conditions: 86, forecast_suitability: 85 },
+        risk: { level: 'LOW', score: 85, warnings: ['Dry climate ideal for seed quality.'] },
+        duration_days: 110,
+        growth_stages: [
+          { name: 'Prepare field', start_day: 0, end_day: 10 },
+          { name: 'Sowing window', start_day: 11, end_day: 25 },
+          { name: 'Vegetative growth', start_day: 26, end_day: 60 },
+          { name: 'Flowering & Seed set', start_day: 61, end_day: 90 },
+          { name: 'Expected harvest', start_day: 91, end_day: 110 }
+        ],
+        reasons: ['Low moisture and well-drained soil preference', 'High market commodity value'],
+        risk_factors: ['Avoid over-watering'],
+        expected_yield: '0.6 - 1.0 tonnes/ha',
+        suggested_sowing_window: 'Sow in well-drained field bed',
+        sowing_status: 'GOOD'
+      }
+    ];
+  } else {
+    // Default (Vadodara, Punjab, Maharashtra, etc.)
+    temp = 29.5;
+    humidity = 74.0;
+    rainProb = 64.0;
+    rainMm = 62.0;
+    topCrops = [
+      {
+        crop_name: 'Groundnut',
+        category: 'Pulses & Oilseeds',
+        match_score: 92,
+        suitability_rating: 'Highly Suitable',
+        scores: { climate_suitability: 94, season_suitability: 95, current_conditions: 90, forecast_suitability: 88 },
+        risk: { level: 'LOW', score: 88, warnings: ['Favorable moisture window.'] },
+        duration_days: 120,
+        growth_stages: [
+          { name: 'Prepare field', start_day: 0, end_day: 10 },
+          { name: 'Sowing window', start_day: 11, end_day: 25 },
+          { name: 'Germination & Vegetative', start_day: 26, end_day: 60 },
+          { name: 'Flowering & Pods', start_day: 61, end_day: 90 },
+          { name: 'Expected harvest', start_day: 91, end_day: 120 }
+        ],
+        reasons: ['Temperature (29.5°C) is within ideal 20-35°C growth window', 'Moisture and soil suitability are high'],
+        risk_factors: ['No major weather risks detected'],
+        expected_yield: '1.8 - 2.5 tonnes/ha',
+        suggested_sowing_window: 'Sow within the next 3–5 days',
+        sowing_status: 'GOOD'
+      },
+      {
+        crop_name: 'Cotton',
+        category: 'Crops',
+        match_score: 87,
+        suitability_rating: 'Highly Suitable',
+        scores: { climate_suitability: 88, season_suitability: 90, current_conditions: 86, forecast_suitability: 84 },
+        risk: { level: 'LOW', score: 84, warnings: ['Good soil warmness for boll setup.'] },
+        duration_days: 160,
+        growth_stages: [
+          { name: 'Prepare field', start_day: 0, end_day: 14 },
+          { name: 'Sowing window', start_day: 15, end_day: 35 },
+          { name: 'Vegetative growth', start_day: 36, end_day: 80 },
+          { name: 'Boll formation', start_day: 81, end_day: 120 },
+          { name: 'Expected harvest', start_day: 121, end_day: 160 }
+        ],
+        reasons: ['Black loamy soil suitability', 'Warm climate accelerates boll development'],
+        risk_factors: ['Requires well-drained soil during germination'],
+        expected_yield: '2.0 - 3.0 tonnes/ha',
+        suggested_sowing_window: 'Sow after field preparation',
+        sowing_status: 'GOOD'
+      },
+      {
+        crop_name: 'Maize',
+        category: 'Crops',
+        match_score: 81,
+        suitability_rating: 'Suitable',
+        scores: { climate_suitability: 82, season_suitability: 84, current_conditions: 80, forecast_suitability: 78 },
+        risk: { level: 'LOW', score: 80, warnings: ['Adequate rainfall expected.'] },
+        duration_days: 100,
+        growth_stages: [
+          { name: 'Prepare field', start_day: 0, end_day: 8 },
+          { name: 'Sowing window', start_day: 9, end_day: 20 },
+          { name: 'Tasseling', start_day: 21, end_day: 55 },
+          { name: 'Cob filling', start_day: 56, end_day: 80 },
+          { name: 'Expected harvest', start_day: 81, end_day: 100 }
+        ],
+        reasons: ['Moderate water requirement matches forecast', 'Adaptable to local loamy soil'],
+        risk_factors: ['Avoid waterlogging during germination'],
+        expected_yield: '3.5 - 5.0 tonnes/ha',
+        suggested_sowing_window: 'Sow during clear rain window',
+        sowing_status: 'GOOD'
+      }
+    ];
+  }
 
   return {
     location: locName,
@@ -342,7 +448,8 @@ function getFallbackRecommendationData(location = 'Vadodara, Gujarat') {
     condition: 'Partly cloudy',
     soil_type: 'Fertile loam',
     top_recommendations: topCrops,
-    sowing_advisory: `Conditions are favorable for groundnut in ${locName}. The next 7 days show manageable rainfall risk, making this a suitable sowing window.`,
+    sowing_advisory: `Conditions in ${locName} (${temp}°C, ${humidity}% humidity) favor ${topCrops[0]?.crop_name} with top suitability (${topCrops[0]?.match_score}%).`,
     is_demo: true
   };
 }
+
