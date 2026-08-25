@@ -31,17 +31,94 @@ const groups = {
 };
 
 const photo = {
-  Wheat:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Wheat%20field.jpg',Rice:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Rice%20paddy%20field%20in%20India.jpg',Maize:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Maize%20field.jpg',Barley:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Barley%20field.jpg',Jowar:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Sorghum%20field.jpg',Ragi:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Finger%20millet.jpg',Oats:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Oat%20field.jpg',Sugarcane:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Sugarcane%20field.jpg',Cotton:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cotton%20plant.jpg',Tea:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Tea%20plantation.jpg',Coffee:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Coffee%20plantation.jpg',Tomato:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Tomatoes%20on%20plant.jpg',Potato:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Potatoes.jpg',Onion:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Onions.jpg',Garlic:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Garlic.jpg',Carrot:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Carrots.jpg',Cabbage:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cabbage.jpg',Cauliflower:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cauliflower.jpg',Broccoli:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Broccoli.jpg',Spinach:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Spinach.jpg',Okra:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Okra.jpg',Brinjal:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Solanum%20melongena%20fruit.jpg',Capsicum:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Capsicum%20annuum%20fruits%20IMGP0044.jpg',Cucumber:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cucumis%20sativus%20fruit.jpg',Pumpkin:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Pumpkins.jpg',Mango:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Mangoes.jpg',Banana:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Banana.jpg',Apple:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Apples.jpg',Orange:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Orange.jpg',Guava:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Guava.jpg',Papaya:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Papaya.jpg',Pomegranate:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Pomegranate%20fruit.jpg',Grapes:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Grapes.jpg',Watermelon:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Watermelon.jpg',Pineapple:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Pineapple.jpg',Litchi:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Lychee.jpg',Strawberry:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Strawberries.jpg',DragonFruit:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Pitaya%20fruit.jpg',Coconut:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Coconuts.jpg',Amla:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Phyllanthus%20emblica%20fruit.jpg',Turmeric:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Turmeric%20plant.jpg',Ginger:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Ginger%20plant.jpg',Cumin:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cumin%20seeds.jpg',Coriander:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Coriander%20seeds.jpg',BlackPepper:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Black%20Pepper%20(Piper%20nigrum)%20fruits.jpg',Cardamom:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cardamom.jpg',Clove:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cloves.jpg',Cinnamon:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Cinnamon.jpg',Fenugreek:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Fenugreek%20seeds.jpg',Chilli:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Red%20Chili%20Pepper.jpg',Saffron:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Saffron%20croccus.jpg'
+  Wheat: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80',
+  Rice: 'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=800&q=80',
+  Bajra: 'https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=800&q=80',
+  Maize: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=800&q=80',
+  Barley: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
+  Jowar: 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a81?auto=format&fit=crop&w=800&q=80',
+  Ragi: 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80',
+  Oats: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80',
+  Sorghum: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80',
+  Quinoa: 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80',
+  Buckwheat: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
+  Amaranth: 'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?auto=format&fit=crop&w=800&q=80',
+  FoxtailMillet: 'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80',
+  LittleMillet: 'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80',
+  KodoMillet: 'https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=800&q=80',
+  BarnyardMillet: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
+  Sugarcane: 'https://images.unsplash.com/photo-1593105544559-ecb03bf26240?auto=format&fit=crop&w=800&q=80',
+  Cotton: 'https://images.unsplash.com/photo-1606041008023-472dfb5e530f?auto=format&fit=crop&w=800&q=80'
 };
+
 const userProvidedPhoto = {
   Oats:'/crops/user-provided/oats.jpeg',Turnip:'/crops/user-provided/turnip.jpeg',SweetPotato:'/crops/user-provided/sweet-potato.jpeg',Yam:'/crops/user-provided/yam.jpeg',Taro:'/crops/user-provided/taro.jpeg',Colocasia:'/crops/user-provided/colocasia.jpeg',Lettuce:'/crops/user-provided/lettuce.jpeg',Celery:'/crops/user-provided/celery.jpeg',Mushroom:'/crops/user-provided/mushroom.jpeg',Zucchini:'/crops/user-provided/zucchini.jpeg',ClusterBean:'/crops/user-provided/cluster-bean.jpeg',IvyGourd:'/crops/user-provided/ivy-gourd.jpeg',SnakeGourd:'/crops/user-provided/snake-gourd.jpeg',AshGourd:'/crops/user-provided/ash-gourd.jpeg',Banana:'/crops/user-provided/banana.jpeg',Amla:'/crops/user-provided/amla.jpeg',Mosambi:'/crops/user-provided/mosambi.jpeg',Chikoo:'/crops/user-provided/chikoo.jpeg',Cumin:'/crops/user-provided/cumin.jpeg',Mustard:'/crops/user-provided/mustard.jpeg',Ajwain:'/crops/user-provided/ajwain.jpeg',Saffron:'/crops/user-provided/saffron.jpeg',Sesame:'/crops/user-provided/sesame.jpeg'
 };
+
 const localPhoto = {
   Bajra:'/crops/Bajra.jpeg',Tomato:'/crops/tomato.jpg',Okra:'/crops/okra.jpg',Brinjal:'/crops/brinjal.jpg',Potato:'/crops/potato.jpg',Cauliflower:'/crops/cauliflower.jpg',Cabbage:'/crops/cabbage.jpg',Cucumber:'/crops/cucumber.jpg',Radish:'/crops/radish.jpg',Carrot:'/crops/carrot.jpg','French Bean':'/crops/french-bean.jpg','Green Peas':'/crops/green-peas.jpg',Capsicum:'/crops/capsicum.jpg','Bitter Gourd':'/crops/bitter-gourd.jpg',Pumpkin:'/crops/pumpkin.jpg','Bottle Gourd':'/crops/bottle-gourd.jpg','Ridge Gourd':'/crops/ridge-gourd.jpg',Spinach:'/crops/spinach.jpg','Fenugreek Leaves':'/crops/fenugreek-leaves.jpg',Taro:'/crops/taro.jpg',Corn:'/crops/corn.jpg',Beetroot:'/crops/beetroot.jpg',Colocasia:'/crops/colocasia.jpg','Green Chilli':'/crops/green-chilli.jpg',Apple:'/crops/apple.jpg',Orange:'/crops/orange.jpg',Banana:'/crops/banana.jpg',Apricot:'/crops/apricot.jpg',Plum:'/crops/plum.jpg',Lemon:'/crops/lemon.jpg',Peach:'/crops/peach.jpg',Cherries:'/crops/cherries.jpg',Kiwi:'/crops/kiwi.jpg',Grapes:'/crops/grapes.jpg',Watermelon:'/crops/watermelon.jpg',Strawberries:'/crops/strawberries.jpg',Blueberries:'/crops/blueberries.jpg','Dragon Fruit':'/crops/dragon-fruit.jpg',Melon:'/crops/melon.jpg',Pomegranate:'/crops/pomegranate.jpg',Pineapple:'/crops/pineapple.jpg',Lime:'/crops/lime.jpg',Raspberry:'/crops/raspberry.jpg',Mango:'/crops/mango.jpg',Fig:'/crops/fig.jpg',Coconut:'/crops/coconut.jpg',Avocado:'/crops/avocado.jpg',Dates:'/crops/dates.jpg','Blood Orange':'/crops/blood-orange.jpg',Persimmon:'/crops/persimmon.jpg','Star Fruit':'/crops/star-fruit.jpg',Papaya:'/crops/papaya.jpg',Guava:'/crops/guava.jpg',Cantaloupe:'/crops/cantaloupe.jpg'
 };
-const genericPhoto = { Crops:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Wheat%20field.jpg',Pulses:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Chickpeas.jpg',Vegetables:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Fruits%20and%20Vegetables%20(20170526-AMS-LSC-0439).jpg',Fruits:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Fruits%20and%20Vegetables%20(20170526-AMS-LSC-0439).jpg',Spices:'https://commons.wikimedia.org/wiki/Special:Redirect/file/Spice%20collection.jpg' };
+
+const categoryPhotoPool = {
+  Crops: [
+    'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a81?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1508747703725-719777637510?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80'
+  ],
+  Pulses: [
+    'https://images.unsplash.com/photo-1515543904379-3d757afe72e4?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?auto=format&fit=crop&w=800&q=80'
+  ],
+  Vegetables: [
+    'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cf?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1598170845058-12ef4a457c7d?auto=format&fit=crop&w=800&q=80'
+  ],
+  Fruits: [
+    'https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=800&q=80'
+  ],
+  Spices: [
+    'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=800&q=80'
+  ]
+};
+
 const fallback = 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=900&q=80';
 const slug = s => s.replace(/[^a-zA-Z0-9]/g,'');
+
+function getDistinctPhoto(name, group) {
+  const s = slug(name);
+  if (userProvidedPhoto[s]) return userProvidedPhoto[s];
+  if (localPhoto[name]) return localPhoto[name];
+  if (photo[s]) return photo[s];
+  if (photo[name]) return photo[name];
+  
+  const pool = categoryPhotoPool[group] || categoryPhotoPool.Crops;
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const idx = Math.abs(hash) % pool.length;
+  return pool[idx];
+}
 
 const cropDetailsExtra = {
   Wheat: { ph: "6.0 - 7.5", minTemp: "10°C", maxTemp: "30°C", water: "450–650 mm", yield: "3.5 - 4.5 tonnes/ha", pests: "Yellow rust, Karnal bunt", byproduct: "Wheat straw for cattle fodder & biochar production" },
@@ -62,7 +139,7 @@ const allItems = Object.entries(groups).flatMap(([group, names]) =>
   names.map(name => ({
     name,
     group,
-    image: userProvidedPhoto[slug(name)] || localPhoto[name] || photo[slug(name)] || genericPhoto[group],
+    image: getDistinctPhoto(name, group),
     season: group === 'Fruits' ? 'Regional / perennial' : group === 'Spices' ? 'Monsoon / winter varies' : group === 'Vegetables' ? 'Year-round / seasonal' : 'Kharif / Rabi varies',
     soil: group === 'Vegetables' ? 'Fertile loam' : 'Well-drained loam',
     water: group === 'Vegetables' ? 'Medium–High' : 'Medium',
@@ -103,7 +180,7 @@ function CropCard({ item, t, lang, onSelect }) {
   return (
     <motion.div className="crop-card" whileHover={{ y: -6 }} onClick={() => onSelect(item)}>
       <div className="crop-photo">
-        <img src={src} onError={() => setSrc(fallback)} alt={item.name} />
+        <img src={src} onError={() => setSrc(getDistinctPhoto(item.name + ' alt', item.group))} alt={item.name} />
         <span>{translateGroup(item.group, lang)}</span>
       </div>
       <div className="crop-info">
