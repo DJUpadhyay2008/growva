@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import './styles.css';
 import {
-  fetchCropRecommendations, fetchWeather, fetchMandiPrices, fetchSchemes, checkSchemeEligibility, diagnoseCropDisease, sendChatMessage
+  fetchCropRecommendations, fetchWeather, fetchMandiPrices, fetchMarketAnalysis, fetchSchemes, checkSchemeEligibility, diagnoseCropDisease, sendChatMessage
 } from './services/plannerApi';
 import {
   getTranslation, translateCrop, translateGroup, translateSoil, translateSeason, translateWater, translateStage, translateWeatherCondition, translateDay
