@@ -1735,7 +1735,14 @@ function App() {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
-      document.getElementById('crop-library')?.scrollIntoView({ behavior: 'smooth' });
+      isClickingRef.current = true;
+      const el = document.getElementById('crop-tabs-anchor') || document.querySelector('.tabs') || document.getElementById('crop-library');
+      if (el) {
+        const yOffset = -90; // account for sticky header height
+        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+      setTimeout(() => { isClickingRef.current = false; }, 800);
     }
   };
 
@@ -1930,7 +1937,7 @@ function App() {
           </article>
         </div>
 
-        <div className="tabs">
+        <div className="tabs" id="crop-tabs-anchor">
           <button className={group === 'All' ? 'selected' : ''} onClick={() => handleGroupChange('All')}>
             {t.lib_all || 'All'} ({allItems.length})
           </button>
