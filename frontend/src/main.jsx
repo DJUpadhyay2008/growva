@@ -2559,10 +2559,15 @@ function KisanChatbot({ lang }) {
       setModel(defaultModel);
       localStorage.setItem('growva_chat_model', defaultModel);
     } else if (newProvider === 'google') {
-      const defaultModel = 'gemini-1.5-flash';
+      const defaultModel = 'gemini-2.5-flash';
       setModel(defaultModel);
       localStorage.setItem('growva_chat_model', defaultModel);
     }
+  };
+
+  const handleModelChange = (newModel) => {
+    setModel(newModel);
+    localStorage.setItem('growva_chat_model', newModel);
   };
 
   const handleKeyChange = (newKey) => {
@@ -2649,12 +2654,37 @@ function KisanChatbot({ lang }) {
                 value={provider}
                 onChange={(e) => handleProviderChange(e.target.value)}
               >
-                <option value="openrouter">OpenRouter (Default: z-ai/glm-5.2:free)</option>
-                <option value="google">Google Gemini (Default: gemini-1.5-flash)</option>
+                <option value="openrouter">OpenRouter AI</option>
+                <option value="google">Google Gemini</option>
               </select>
 
               <div className="config-label" style={{ marginTop: 8 }}>
-                2. API Key ({provider === 'openrouter' ? 'OpenRouter Key sk-or-v1...' : 'Google Gemini Key'})
+                2. Select Model
+              </div>
+              <select
+                className="config-select"
+                value={model}
+                onChange={(e) => handleModelChange(e.target.value)}
+              >
+                {provider === 'google' ? (
+                  <>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
+                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                    <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="z-ai/glm-5.2:free">GLM 5.2 (Free)</option>
+                    <option value="google/gemini-2.0-flash-exp:free">Gemini 2.0 Flash (OpenRouter Free)</option>
+                    <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (Free)</option>
+                    <option value="deepseek/deepseek-r1:free">DeepSeek R1 (Free)</option>
+                  </>
+                )}
+              </select>
+
+              <div className="config-label" style={{ marginTop: 8 }}>
+                3. API Key ({provider === 'openrouter' ? 'OpenRouter Key sk-or-v1...' : 'Google Gemini Key'})
               </div>
               <input
                 type="password"

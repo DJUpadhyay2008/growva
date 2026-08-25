@@ -61,7 +61,7 @@ def generate_local_fallback_reply(last_user_msg: str) -> str:
 @router.post("", response_model=ChatResponse)
 async def chat_with_kisan_ai(req: ChatRequest):
     provider = (req.provider or "openrouter").lower()
-    model = req.model or ("z-ai/glm-5.2:free" if provider == "openrouter" else "gemini-1.5-flash")
+    model = req.model or ("z-ai/glm-5.2:free" if provider == "openrouter" else "gemini-2.5-flash")
     api_key = req.api_key.strip() if req.api_key else None
     
     last_user_msg = next((m.content for m in reversed(req.messages) if m.role == "user"), "Hello")
@@ -122,34 +122,40 @@ async def chat_with_kisan_ai(req: ChatRequest):
             role = "user" if m.role == "user" else "model"
             contents.append({"role": role, "parts": [{"text": m.content}]})
 
-        gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-        try:
-            async with httpx.AsyncClient(timeout=25.0) as client:
-                res = await client.post(
-                    gemini_url,
-                    headers={"Content-Type": "application/json"},
-                    json={
-                        "system_instruction": {"parts": [{"text": AGRI_SYSTEM_PROMPT}]},
-                        "contents": contents,
-                        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 800}
-                    }
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    content = data["candidates"][0]["content"]["parts"][0]["text"]
-                    return ChatResponse(
-                        reply=content,
-                        provider_used="Google Gemini API",
-                        model_used=model
+        # Models to try if requested model fails (e.g. 404 Not Found)
+        fallback_models = [model, "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-1.5-flash"]
+        # Remove duplicates while preserving order
+        candidate_models = list(dict.fromkeys(fallback_models))
+
+        async with httpx.AsyncClient(timeout=25.0) as client:
+            for current_model in candidate_models:
+                gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/{current_model}:generateContent?key={api_key}"
+                try:
+                    res = await client.post(
+                        gemini_url,
+                        headers={"Content-Type": "application/json"},
+                        json={
+                            "system_instruction": {"parts": [{"text": AGRI_SYSTEM_PROMPT}]},
+                            "contents": contents,
+                            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 800}
+                        }
                     )
-                else:
-                    logger.warning(f"Google Gemini API error {res.status_code}: {res.text}")
-                    reply_text = f"*(Notice: Google Gemini returned status {res.status_code}. Falling back to Kisan Sahayak AI)*\n\n" + generate_local_fallback_reply(last_user_msg)
-                    return ChatResponse(reply=reply_text, provider_used="Google Gemini Fallback", model_used=model)
-        except Exception as e:
-            logger.error(f"Google call failed: {e}")
-            reply_text = generate_local_fallback_reply(last_user_msg)
-            return ChatResponse(reply=reply_text, provider_used="Local Assistant", model_used=model)
+                    if res.status_code == 200:
+                        data = res.json()
+                        content = data["candidates"][0]["content"]["parts"][0]["text"]
+                        return ChatResponse(
+                            reply=content,
+                            provider_used="Google Gemini API",
+                            model_used=current_model
+                        )
+                    else:
+                        logger.warning(f"Google Gemini model '{current_model}' error {res.status_code}: {res.text}")
+                except Exception as e:
+                    logger.error(f"Google Gemini call failed for model '{current_model}': {e}")
+            
+            # If all candidates fail, return fallback response
+            reply_text = f"*(Notice: Google Gemini returned error. Falling back to Kisan Sahayak AI)*\n\n" + generate_local_fallback_reply(last_user_msg)
+            return ChatResponse(reply=reply_text, provider_used="Google Gemini Fallback", model_used=model)
 
     # Fallback default
     return ChatResponse(
