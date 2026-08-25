@@ -2559,7 +2559,7 @@ function KisanChatbot({ lang }) {
       setModel(defaultModel);
       localStorage.setItem('growva_chat_model', defaultModel);
     } else if (newProvider === 'google') {
-      const defaultModel = 'gemini-2.5-flash';
+      const defaultModel = 'gemini-1.5-flash';
       setModel(defaultModel);
       localStorage.setItem('growva_chat_model', defaultModel);
     }
@@ -2654,7 +2654,7 @@ function KisanChatbot({ lang }) {
                 value={provider}
                 onChange={(e) => handleProviderChange(e.target.value)}
               >
-                <option value="openrouter">OpenRouter AI</option>
+                <option value="openrouter">OpenRouter AI (Free Models Available)</option>
                 <option value="google">Google Gemini</option>
               </select>
 
@@ -2668,10 +2668,10 @@ function KisanChatbot({ lang }) {
               >
                 {provider === 'google' ? (
                   <>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (Recommended)</option>
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                    <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Latest)</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (Default)</option>
+                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Experimental)</option>
                     <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash 8B</option>
                   </>
                 ) : (
                   <>
