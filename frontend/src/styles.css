@@ -618,4 +618,253 @@
   outline: 0;
 }
 
+/* Comprehensive Mobile & Tablet Responsive System */
+
+@media (max-width: 1050px) {
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 40px 5vw;
+  }
+  .quick-tools {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0 5vw 40px;
+  }
+  .feature {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 50px 5vw;
+  }
+  .crop-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .scheme-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .reference-guides {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  header {
+    height: auto;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-actions {
+    margin-left: auto;
+  }
+  header nav {
+    width: 100%;
+    order: 3;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    ms-overflow-style: none;
+    display: flex;
+    gap: 4px;
+  }
+  header nav::-webkit-scrollbar {
+    display: none;
+  }
+  header nav button {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .hero {
+    padding: 30px 16px 40px;
+  }
+  .hero h1 {
+    font-size: 32px;
+    letter-spacing: -1px;
+    margin: 12px 0;
+  }
+  .hero-copy > p {
+    font-size: 14px;
+  }
+  .hero-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .hero-buttons button {
+    justify-content: center;
+    width: 100%;
+  }
+  .stats {
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .robot-wrap {
+    min-height: 340px;
+  }
+  .robot-3d {
+    height: 340px;
+  }
+
+  .quick-tools {
+    grid-template-columns: 1fr;
+    padding: 0 16px 40px;
+  }
+
+  .feature, .weather, .library, .schemes, .section-wrapper {
+    padding: 40px 16px;
+  }
+
+  .section-head, .library .section-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .section-head h2 {
+    font-size: 28px;
+  }
+
+  .search {
+    width: 100%;
+  }
+
+  .reference-guide {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .reference-guide img {
+    height: 160px;
+    min-height: 160px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+    padding-bottom: 6px;
+    margin: 16px 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .tabs button {
+    flex-shrink: 0;
+  }
+
+  .crop-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .crop-photo {
+    height: 130px;
+  }
+  .crop-info {
+    padding: 10px;
+  }
+  .crop-info h3 {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .crop-info > div {
+    font-size: 9.5px;
+  }
+
+  .crop-pagination-bar {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    padding-top: 18px;
+    margin-top: 24px;
+  }
+  .pagination-controls {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .weather-grid {
+    grid-template-columns: 1fr;
+  }
+  .forecast {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .mandi-hero-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mandi-grid {
+    grid-template-columns: 1fr;
+  }
+  .mandi-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .scheme-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .disease-box {
+    grid-template-columns: 1fr;
+  }
+  .preset-leaves-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .planner-grid {
+    grid-template-columns: 1fr;
+  }
+  .score-breakdown {
+    grid-template-columns: 1fr;
+  }
+
+  footer {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px 16px;
+    gap: 16px;
+  }
+
+  .kisan-chat-window {
+    width: calc(100vw - 20px);
+    right: 10px;
+    bottom: 74px;
+    height: calc(100vh - 100px);
+    max-height: 520px;
+  }
+  .kisan-fab {
+    bottom: 16px;
+    right: 16px;
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .crop-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .crop-photo {
+    height: 115px;
+  }
+  .crop-info {
+    padding: 8px;
+  }
+  .crop-info h3 {
+    font-size: 12.5px;
+  }
+  .page-btn {
+    min-width: 30px;
+    height: 30px;
+    padding: 0 6px;
+    font-size: 10.5px;
+  }
+}
+
+
 
