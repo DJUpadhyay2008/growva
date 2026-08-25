@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import {
@@ -1651,11 +1651,60 @@ function App() {
   const [marketCrop, setMarketCrop] = useState('Groundnut');
   const [marketLocation, setMarketLocation] = useState('Vadodara, Gujarat');
 
+  const isClickingRef = useRef(false);
+
   const handleSelectMarketCrop = (cropName, loc) => {
     if (cropName) setMarketCrop(cropName);
     if (loc) setMarketLocation(loc);
+    setActive('Mandi Rates');
+    isClickingRef.current = true;
     document.getElementById('mandi-rates')?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => { isClickingRef.current = false; }, 800);
   };
+
+  useEffect(() => {
+    const sectionMap = [
+      { key: 'Dashboard', id: 'dashboard' },
+      { key: 'Planner', id: 'planner' },
+      { key: 'Weather', id: 'weather' },
+      { key: 'Crop Library', id: 'crop-library' },
+      { key: 'Mandi Rates', id: 'mandi-rates' },
+      { key: 'Disease Check', id: 'disease-check' },
+      { key: 'Schemes', id: 'schemes' },
+      { key: 'By-Products', id: 'by-products' },
+    ];
+
+    const handleScroll = () => {
+      if (isClickingRef.current) return;
+
+      const scrollPos = window.scrollY + 160;
+      const totalHeight = document.documentElement.scrollHeight;
+      const windowHeight = window.innerHeight;
+
+      if (window.scrollY + windowHeight >= totalHeight - 40) {
+        setActive('By-Products');
+        return;
+      }
+
+      let current = 'Dashboard';
+      for (const sec of sectionMap) {
+        const el = document.getElementById(sec.id);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPos >= top && scrollPos < top + height) {
+            current = sec.key;
+            break;
+          }
+        }
+      }
+      setActive(current);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const t = useMemo(() => getTranslation(lang), [lang]);
 
@@ -1667,6 +1716,7 @@ function App() {
   const go = (key) => {
     setActive(key);
     setMenu(false);
+    isClickingRef.current = true;
     const targetMap = {
       'Dashboard': 'dashboard',
       'Planner': 'planner',
@@ -1679,6 +1729,7 @@ function App() {
     };
     const id = targetMap[key] || key.toLowerCase().replace(/ /g, '-');
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => { isClickingRef.current = false; }, 800);
   };
 
   return (
