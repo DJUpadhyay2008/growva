@@ -2524,6 +2524,52 @@ function SchemeCompareModal({ schemes, onClose, onRemove }) {
   );
 }
 
+// Helper to render formatted Markdown in Chat Messages
+function renderFormattedText(text) {
+  if (!text) return null;
+
+  const parseInline = (str) => {
+    const parts = str.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+        return <em key={i}>{part.slice(1, -1)}</em>;
+      }
+      return part;
+    });
+  };
+
+  const lines = text.split('\n');
+  const elements = [];
+  let currentList = [];
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+      const listContent = trimmed.substring(2);
+      currentList.push(<li key={`li-${index}`}>{parseInline(listContent)}</li>);
+    } else {
+      if (currentList.length > 0) {
+        elements.push(<ul key={`ul-${index}`} className="formatted-chat-ul">{currentList}</ul>);
+        currentList = [];
+      }
+      if (trimmed === '') {
+        elements.push(<div key={`br-${index}`} className="formatted-chat-spacer" />);
+      } else {
+        elements.push(<p key={`p-${index}`} className="formatted-chat-p">{parseInline(trimmed)}</p>);
+      }
+    }
+  });
+
+  if (currentList.length > 0) {
+    elements.push(<ul key={`ul-end`} className="formatted-chat-ul">{currentList}</ul>);
+  }
+
+  return <div className="formatted-markdown-body">{elements}</div>;
+}
+
 // AI Kisan Assistant Floating Chatbot Component
 function KisanChatbot({ lang }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -2694,7 +2740,7 @@ function KisanChatbot({ lang }) {
                 onChange={(e) => handleKeyChange(e.target.value)}
               />
 
-              <div style={{ fontSize: 10, color: '#b8dc9f', opacity: 0.85, marginTop: 6 }}>
+              <div style={{ fontSize: 10, color: '#1d4e34', fontWeight: 700, marginTop: 6 }}>
                 ⚡ Active Model: <b>{model}</b> {!apiKey && '(Demo Key Active)'}
               </div>
             </div>
@@ -2704,7 +2750,7 @@ function KisanChatbot({ lang }) {
           <div className="chat-messages-area">
             {messages.map((m, idx) => (
               <div key={idx} className={`msg-wrapper ${m.role}`}>
-                <div className="msg-bubble">{m.content}</div>
+                <div className="msg-bubble">{renderFormattedText(m.content)}</div>
                 {m.meta && <div className="msg-meta">via {m.meta}</div>}
               </div>
             ))}

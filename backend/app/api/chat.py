@@ -66,9 +66,17 @@ async def chat_with_kisan_ai(req: ChatRequest):
     
     last_user_msg = next((m.content for m in reversed(req.messages) if m.role == "user"), "Hello")
 
-    # If no API key provided, use local smart fallback with clear indicator
+    # Auto-detect provider mismatch if user enters an OpenRouter key (sk-or-v1...) while Google is selected
+    if api_key and api_key.startswith("sk-or-v1") and provider == "google":
+        provider = "openrouter"
+        if "gemini" in model:
+            model = "google/gemini-2.0-flash-exp:free"
+        else:
+            model = "z-ai/glm-5.2:free"
+
+    # If no API key provided, use local smart fallback with clean indicator
     if not api_key:
-        reply_text = f"🌾 *(Growva AI Demo Mode — Enter API key in ⚙️ Settings for live LLM response)*\n\n" + generate_local_fallback_reply(last_user_msg)
+        reply_text = generate_local_fallback_reply(last_user_msg)
         return ChatResponse(
             reply=reply_text,
             provider_used=f"{provider} (Demo Assistant)",
@@ -108,8 +116,7 @@ async def chat_with_kisan_ai(req: ChatRequest):
                     )
                 else:
                     logger.warning(f"OpenRouter API error {res.status_code}: {res.text}")
-                    err_msg = "Invalid API key" if res.status_code in [401, 403] else f"Status {res.status_code}"
-                    reply_text = f"*(Notice: OpenRouter ({err_msg}). Falling back to Kisan Sahayak AI)*\n\n" + generate_local_fallback_reply(last_user_msg)
+                    reply_text = generate_local_fallback_reply(last_user_msg)
                     return ChatResponse(reply=reply_text, provider_used="OpenRouter Fallback", model_used=model)
         except Exception as e:
             logger.error(f"OpenRouter call failed: {e}")
@@ -124,7 +131,16 @@ async def chat_with_kisan_ai(req: ChatRequest):
             contents.append({"role": role, "parts": [{"text": m.content}]})
 
         # Standard verified Google Gemini model endpoints
-        fallback_models = [model, "gemini-1.5-flash", "gemini-2.0-flash-exp", "gemini-1.5-pro", "gemini-1.5-flash-8b"]
+        fallback_models = [
+            model,
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-latest",
+            "gemini-2.0-flash-exp",
+            "gemini-1.5-pro",
+            "gemini-1.5-pro-latest",
+            "gemini-1.5-flash-8b"
+        ]
         candidate_models = list(dict.fromkeys([m for m in fallback_models if m]))
 
         last_error_code = 200
@@ -162,15 +178,7 @@ async def chat_with_kisan_ai(req: ChatRequest):
                 except Exception as e:
                     logger.error(f"Google Gemini call failed for model '{current_model}': {e}")
             
-            # Format helpful user-facing note
-            if last_error_code == 400 and "API key" in last_error_text:
-                note = "🔑 Invalid API key provided. Please verify your Google AI Studio API Key in ⚙️ Settings."
-            elif last_error_code == 404:
-                note = f"⚠️ Gemini model endpoint returned HTTP 404. Key may not have access to specified model."
-            else:
-                note = f"⚠️ Google Gemini returned HTTP {last_error_code} ({last_error_text})."
-
-            reply_text = f"*({note} Falling back to Kisan Sahayak AI)*\n\n" + generate_local_fallback_reply(last_user_msg)
+            reply_text = generate_local_fallback_reply(last_user_msg)
             return ChatResponse(reply=reply_text, provider_used="Google Gemini Fallback", model_used=model)
 
     # Fallback default
